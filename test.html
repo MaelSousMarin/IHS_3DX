@@ -1,0 +1,455 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IHS Passeport Numérique - Module Buse Ultimaker 2+</title>
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-hover: #334155;
+            --primary: #38bdf8;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --success: #22c55e;
+            --warning: #eab308;
+            --danger: #ef4444;
+            --border: #334155;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            padding: 12px;
+            overflow-x: hidden;
+        }
+
+        /* BARRE DE SIMULATION (Pour tester sans 3DEXPERIENCE) */
+        .sim-bar {
+            background: #020617;
+            border: 1px dashed var(--primary);
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            font-size: 12px;
+        }
+        .sim-bar span {
+            color: var(--primary);
+            font-weight: bold;
+        }
+        .sim-btn {
+            background: var(--bg-card);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            padding: 4px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: 0.2s;
+        }
+        .sim-btn:hover {
+            background: var(--primary);
+            color: #000;
+        }
+
+        /* EN-TÊTE ET NAVIGATION PAR ONGLETS */
+        .header {
+            background: var(--bg-card);
+            padding: 14px 16px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            margin-bottom: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .piece-title-box h1 {
+            font-size: 20px;
+            color: var(--primary);
+        }
+        .piece-title-box p {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            background: var(--bg-hover);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            background: var(--bg-card);
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            transition: 0.2s;
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: #0f172a;
+            border-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        /* GRILLE DES INDICATEURS RAPIDES */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .metric-card {
+            background: var(--bg-card);
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+        .metric-card .label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+        .metric-card .value {
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 4px;
+            color: var(--primary);
+        }
+
+        /* GRILLE DES 11 CRITÈRES (PASSEPORT NUMÉRIQUE) */
+        .criteria-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .crit-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 12px;
+            border-radius: 8px;
+            text-align: left;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .crit-btn:hover, .crit-btn.active {
+            border-color: var(--primary);
+            background: var(--bg-hover);
+        }
+        .crit-btn .crit-num {
+            font-size: 11px;
+            color: var(--primary);
+            font-weight: bold;
+        }
+        .crit-btn .crit-name {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        /* ZONE DE DÉTAIL DU CRITÈRE SÉLECTIONNÉ */
+        .detail-box {
+            background: var(--bg-card);
+            border: 1px solid var(--primary);
+            border-radius: 10px;
+            padding: 16px;
+            min-height: 110px;
+        }
+        .detail-box h3 {
+            color: var(--primary);
+            font-size: 15px;
+            margin-bottom: 8px;
+        }
+        .detail-box p {
+            font-size: 14px;
+            line-height: 1.5;
+            color: var(--text-main);
+        }
+
+        /* ONGLET 2 : DIAGNOSTIC & DÉMONTAGE */
+        .diag-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 14px;
+        }
+        .diag-section h3 {
+            color: var(--primary);
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        .alert-box {
+            background: rgba(239, 68, 68, 0.15);
+            border-left: 4px solid var(--danger);
+            padding: 10px 12px;
+            border-radius: 4px;
+            margin-bottom: 14px;
+            font-size: 13px;
+        }
+        .steps-list {
+            padding-left: 20px;
+            line-height: 1.7;
+            font-size: 14px;
+        }
+        .state-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+        }
+        .state-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #fff;
+            font-size: 14px;
+            opacity: 0.85;
+            transition: 0.2s;
+        }
+        .state-btn:hover {
+            opacity: 1;
+            transform: translateY(-2px);
+        }
+        .btn-ok { background: var(--success); }
+        .btn-warn { background: var(--warning); color: #000; }
+        .btn-err { background: var(--danger); }
+
+        /* ONGLET 3 : BLOC-NOTES TECHNIQUE */
+        .note-form {
+            background: var(--bg-card);
+            padding: 16px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            margin-bottom: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .note-form input, .note-form select, .note-form textarea {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--bg-dark);
+            color: var(--text-main);
+            font-size: 14px;
+        }
+        .btn-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .action-btn {
+            background: var(--primary);
+            color: #000;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .action-btn.secondary {
+            background: var(--bg-hover);
+            color: var(--text-main);
+        }
+        .notes-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .note-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 12px;
+            border-radius: 8px;
+        }
+        .note-item .note-meta {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+        .note-item .note-tag {
+            display: inline-block;
+            background: var(--primary);
+            color: #000;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-right: 6px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- BARRE DE SIMULATION RAPIDE (POUR TESTER SUR PC SANS 3DEXPERIENCE) -->
+    <div class="sim-bar">
+        <span>🛠️ Mode Test PC :</span>
+        <button class="sim-btn" onclick="chargerPiece('ensemble_buse')">Tête complète</button>
+        <button class="sim-btn" onclick="chargerPiece('buse_laiton')">Buse Laiton</button>
+        <button class="sim-btn" onclick="chargerPiece('bloc_chauffe')">Bloc de Chauffe</button>
+        <button class="sim-btn" onclick="chargerPiece('isolateur_ptfe')">Isolateur PTFE</button>
+        <button class="sim-btn" onclick="chargerPiece('ventilateurs')">Ventilateurs</button>
+    </div>
+
+    <!-- EN-TÊTE DE LA PIÈCE SÉLECTIONNÉE -->
+    <div class="header">
+        <div class="piece-title-box">
+            <h1 id="nomPiece">Chargement...</h1>
+            <p id="sousTitrePiece">Sous-ensemble tête d'impression Ultimaker 2+</p>
+        </div>
+        <div id="badgeEtat" class="status-badge">État : Non contrôlé</div>
+    </div>
+
+    <!-- NAVIGATION ENTRE LES 3 PAGES FUSIONNÉES -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="changerOnglet('infos', this)">📋 1. Fiche Technique</button>
+        <button class="tab-btn" onclick="changerOnglet('diagnostic', this)">🔧 2. Diagnostic & Démontage</button>
+        <button class="tab-btn" onclick="changerOnglet('notes', this)">📝 3. Bloc-Notes</button>
+    </div>
+
+    <!-- ==================== ONGLET 1 : FICHE TECHNIQUE ==================== -->
+    <div id="tab-infos" class="tab-content active">
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="label">Masse</div>
+                <div class="value" id="valPoids">--</div>
+            </div>
+            <div class="metric-card">
+                <div class="label">Matériau</div>
+                <div class="value" id="valMateriau">--</div>
+            </div>
+            <div class="metric-card">
+                <div class="label">Temps Démontage</div>
+                <div class="value" id="valTemps">--</div>
+            </div>
+            <div class="metric-card">
+                <div class="label">Indice Réparabilité</div>
+                <div class="value" id="valIndice">--</div>
+            </div>
+        </div>
+
+        <!-- Les 11 critères du Passeport Numérique -->
+        <div class="criteria-grid" id="grilleCriteres"></div>
+
+        <!-- Détail du critère cliqué -->
+        <div class="detail-box">
+            <h3 id="titreCritere">Sélectionnez un critère ci-dessus</h3>
+            <p id="texteCritere">Cliquez sur l'une des 11 catégories pour afficher les données du passeport numérique de la pièce.</p>
+        </div>
+    </div>
+
+    <!-- ==================== ONGLET 2 : DIAGNOSTIC ==================== -->
+    <div id="tab-diagnostic" class="tab-content">
+        <div class="alert-box" id="alerteSecurite">
+            ⚠️ Attention : Vérifiez que la buse est refroidie (< 30°C) avant toute manipulation.
+        </div>
+
+        <div class="diag-section">
+            <h3>🔩 Outillage requis</h3>
+            <p id="outilsRequis">--</p>
+        </div>
+
+        <div class="diag-section">
+            <h3>📖 Gamme de démontage pas-à-pas</h3>
+            <ol class="steps-list" id="listeEtapes"></ol>
+        </div>
+
+        <div class="diag-section">
+            <h3>🩺 Déclarer l'état de la pièce (Fin de diagnostic)</h3>
+            <div class="state-buttons">
+                <button class="state-btn btn-ok" onclick="definirEtat('Opérationnel (Réemployable)', '#22c55e')">✅ Opérationnel</button>
+                <button class="state-btn btn-warn" onclick="definirEtat('Usé (À reconditionner)', '#eab308')">⚠️ Usé / À nettoyer</button>
+                <button class="state-btn btn-err" onclick="definirEtat('Défectueux (À recycler)', '#ef4444')">❌ Défectueux</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== ONGLET 3 : BLOC-NOTES ==================== -->
+    <div id="tab-notes" class="tab-content">
+        <div class="note-form">
+            <input type="text" id="noteAuteur" placeholder="Nom de l'opérateur (ex: Jean Dupont)">
+            <select id="noteTag">
+                <option value="Observation">🔍 Observation générale</option>
+                <option value="Usure">⚠️ Trace d'usure / Calamine</option>
+                <option value="Blocage">🔩 Vis grippée / Démontage difficile</option>
+                <option value="Rétrofit">♻️ Idée d'amélioration / Rétrofit</option>
+            </select>
+            <textarea id="noteTexte" rows="3" placeholder="Saisissez votre observation sur la pièce sélectionnée..."></textarea>
+            <div class="btn-row">
+                <button class="action-btn" onclick="ajouterNote()">💾 Enregistrer la note</button>
+                <button class="action-btn secondary" onclick="exporterWord()">📄 Exporter le rapport (.doc)</button>
+            </div>
+        </div>
+
+        <div class="notes-list" id="listeNotes"></div>
+    </div>
+
+    <!-- ==================== SCRIPT JAVASCRIPT ==================== -->
+    <script>
+        /* =========================================================================
+           1. BASE DE DONNÉES DES PIÈCES DE LA BUSE (Facile à modifier comme du Word)
+           ========================================================================= */
+        const baseDeDonnees = {
+            "ensemble_buse": {
+                nom: "Ensemble Tête d'Impression (Buse complète)",
+                sousTitre: "Module d'extrusion Olsson Block - Ultimaker 2+",
+                poids: "285 g",
+                materiau: "Multi-matériaux",
+                temps: "12 min",
+                indice: "8.5 / 10",
+                securite: "⚠️ Risque de brûlure grave (jusqu'à 260°C) et pincement électrique (24V). Couper l'alimentation avant intervention.",
+                outils: "Tournevis Hexagonal (Allen) 2.0 mm, Clé à douille 7 mm, Pince plate.",
+                etapes: [
+                    "Effectuer un retrait du filament ( procédure 'Material Remove' ) puis éteindre l'imprimante.",
+                    "Dévisser les 4 vis du carénage métallique des ventilateurs avec la clé Allen 2 mm.",
+                    "Extraire le tube de guidage PTFE en appuyant sur la bague de verrouillage (Bowden clamp).",
+                    "Séparer le bloc Olsson et déconnecter délicatement la sonde PT100 et la cartouche chauffante."
+                ],
+                criteres: {
