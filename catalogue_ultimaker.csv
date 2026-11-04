@@ -1,0 +1,114 @@
+Ref;NomOfficiel
+PRINTHEAD;Print Head Assembly (Tête complète)
+1156;Z-shaft Cap Bottom
+1230;Front Panel UM2
+1231;Back Panel UM2
+1232;Left Panel UM2
+1233;Right Panel UM2
+1235;Top Panel UM2+
+1240;Main Board Electronics Cover
+1251;Ulticontroller Electronics Cover
+1273;Cable Cover
+2282;Print Table Back Cover
+2294;Short Reel Holder
+1011;Y-linear shaft
+1012;X-linear shaft
+1056;Sintered Bushing
+1159;Z-Motor with Trapezoidal Lead Screw
+1169;Z-linear Shaft
+1172;Print Head Shaft X
+1173;Print Head Shaft Y
+1315;Jumper
+1546;Main Board v2.1.4
+1171;Double flat Cable 10 Wire
+1244;Knob Front UM2
+1245;Knob Housing UM2
+1247;OLED Display UM2
+1249;Ulticontroller Board
+1287;Washer M7
+1354;ISO 724 Hex nut M7
+9427;SD card + UM Sticker Assembly
+1165;Timing Pulley 5mm Shaft GT2
+1166;Timing Pulley 8mm Shaft GT2
+1167;Timing Pulley Double 8mm Shaft GT2
+1211;Set screw M4x4
+1065;Linear Bearing LM6LUU
+1170;Square Flanged Linear Bearing LMK12LUU
+1220;Ball Bearing F688-2RS
+1188;Timing Belt GT2 200
+1189;Timing Belt GT2 610
+1168;Sliding Block Spring
+1255;Sliding Block Half UM2
+1176;Spacer 8.2x10x5
+1177;Spacer 8.2x10x10
+1178;Spacer 8.2x10x25
+1200;ISO 7380 M3x8
+1201;Washer M3
+1202;ISO 7380 M3x10
+1203;ISO 7380 M3x12
+1204;ISO 7380 M3x16
+1205;ISO 7380 M3x14
+1206;ISO 7380 M3x20
+1207;ISO 7380 M3x25
+1209;Nut M3
+1213;DIN 562 Square Nut M3 A2
+1214;ISO 7040 Nut M3 prev. torque A2
+1242;Spacer 3.2x6x10
+1348;ISO 7380 M3x4 A2
+1351;ISO 4762 M2.5x10
+1362;Tap Fix 2.5x14 mm steel countersunk
+1521;Short Print Head Thumb Screw
+2317;M3x16 countersunk pozidrive
+1153;Print Table Base Plate
+1154;Print Table Glass
+1243;Heated Bed Cable Clip
+1256;Build Platform Glass Retainer Back
+1257;Knurled Nut Platform
+1987;Table Clip Front-Left
+1988;Table Clip Front-Right
+9487;Print Table Heated Bed + Cable
+1186;Print Head Cable
+1306;Hot end holder bottom
+1307;Hot end holder top
+1308;Cooling Rib Hot End
+1310;Hot end Isolator
+1321;Print Head Middle
+1322;Print Head Bottom
+1748;Print Head Top
+2275;Isolator Spacer 9.4 mm
+2278;TFM Isolator Coupler
+2283;Heater Cartridge 24V 35W
+2284;Fan Bracket
+2288;PT100 B sensor glassfiber
+2311;Olsson Block
+2312;Olsson Nozzle 0.25
+2313;Olsson Nozzle 0.40
+2314;Olsson Nozzle 0.60
+2315;Olsson Nozzle 0.80
+2322;Nozzle ring DIN 6796MV M3
+1069;Tube Coupling Collet
+1071;Clamp Clip
+1266;Bowden tube
+1241;Motor Spacer UM2
+2203;X,Y Motor
+9470;Feeder Motor Assembly
+1024;Limit Switch, Black Short Wire
+2204;Limit Switch, Blue Wire
+2205;Limit Switch, Red Wire
+1313;Model Cooling Fan 12VDC 0.1A
+1330;Hot-end Cooling Fan 5VDC 0.08A
+1238;Power Adapter 24V-220W
+1805;Power Cable EU Type C13
+1806;Power Cable UK Type C13
+1807;Power Cable AU Type C13
+1808;Power Cable US Type C13
+1161;LED Strip Cold White
+1144;USB Cable
+1226;Grease for Z-screw (Magnalube-G)
+1281;Braided Sleeve Clip
+1227;Hex Key Screwdriver 2
+1363;Ferrite Core
+1400;Hex Key Wrench 1.5
+1401;Hex Key Wrench 2
+1402;Hex Key Wrench 2.5
+9472;Feeder UM2+ Assembly
