@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IHS Passeport Numérique - Module Buse Ultimaker 2+</title>
+    <title>IHS Passeport Numérique - Catalogue CSV Minimal</title>
     <style>
         :root {
             --bg-dark: #0f172a;
             --bg-card: #1e293b;
             --bg-hover: #334155;
             --primary: #38bdf8;
+            --accent: #f59e0b;
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
             --success: #22c55e;
@@ -18,597 +19,255 @@
             --border: #334155;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        body { background-color: var(--bg-dark); color: var(--text-main); padding: 12px; overflow-x: hidden; }
 
-        body {
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            padding: 12px;
-            overflow-x: hidden;
-        }
-
-        /* BARRE DE SIMULATION (Pour tester sans 3DEXPERIENCE) */
         .sim-bar {
-            background: #020617;
-            border: 1px dashed var(--primary);
-            padding: 8px 12px;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
-            font-size: 12px;
+            background: #020617; border: 1px dashed var(--primary); padding: 8px 12px;
+            border-radius: 8px; margin-bottom: 12px; display: flex; align-items: center;
+            gap: 8px; flex-wrap: wrap; font-size: 12px;
         }
-        .sim-bar span {
-            color: var(--primary);
-            font-weight: bold;
+        .sim-bar span { color: var(--primary); font-weight: bold; }
+        .sim-select {
+            background: var(--bg-card); color: var(--text-main); border: 1px solid var(--primary);
+            padding: 5px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; flex: 1; min-width: 220px;
         }
-        .sim-btn {
-            background: var(--bg-card);
-            color: var(--text-main);
-            border: 1px solid var(--border);
-            padding: 4px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-            transition: 0.2s;
-        }
-        .sim-btn:hover {
-            background: var(--primary);
-            color: #000;
+        .csv-status {
+            font-size: 11px; padding: 3px 8px; border-radius: 4px;
+            background: rgba(34, 197, 94, 0.2); color: #4ade80; font-weight: bold;
         }
 
-        /* EN-TÊTE ET NAVIGATION PAR ONGLETS */
         .header {
-            background: var(--bg-card);
-            padding: 14px 16px;
-            border-radius: 10px;
-            border: 1px solid var(--border);
-            margin-bottom: 14px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
+            background: var(--bg-card); padding: 14px 16px; border-radius: 10px;
+            border: 1px solid var(--border); margin-bottom: 14px; display: flex;
+            justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
         }
+        .ref-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap; }
+        .ref-badge { background: var(--accent); color: #000; font-weight: 800; font-size: 12px; padding: 3px 8px; border-radius: 4px; }
+        .cad-badge { background: #020617; color: var(--text-muted); font-family: monospace; font-size: 11px; padding: 3px 8px; border-radius: 4px; border: 1px solid var(--border); }
+        .piece-title-box h1 { font-size: 19px; color: var(--primary); }
+        .piece-title-box p { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
 
-        .piece-title-box h1 {
-            font-size: 20px;
-            color: var(--primary);
-        }
-        .piece-title-box p {
-            font-size: 13px;
-            color: var(--text-muted);
-        }
+        .status-badge { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; background: var(--bg-hover); }
 
-        .status-badge {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-            background: var(--bg-hover);
-        }
-
-        .tabs {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 14px;
-        }
-
+        .tabs { display: flex; gap: 8px; margin-bottom: 14px; }
         .tab-btn {
-            flex: 1;
-            padding: 12px;
-            background: var(--bg-card);
-            color: var(--text-muted);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 14px;
-            transition: 0.2s;
+            flex: 1; padding: 11px; background: var(--bg-card); color: var(--text-muted);
+            border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px;
         }
+        .tab-btn.active { background: var(--primary); color: #0f172a; border-color: var(--primary); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
 
-        .tab-btn.active {
-            background: var(--primary);
-            color: #0f172a;
-            border-color: var(--primary);
-        }
+        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(125px, 1fr)); gap: 10px; margin-bottom: 14px; }
+        .metric-card { background: var(--bg-card); padding: 10px; border-radius: 8px; border: 1px solid var(--border); text-align: center; }
+        .metric-card .label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; }
+        .metric-card .value { font-size: 15px; font-weight: bold; margin-top: 4px; color: var(--primary); }
 
-        .tab-content {
-            display: none;
-        }
-        .tab-content.active {
-            display: block;
-        }
-
-        /* GRILLE DES INDICATEURS RAPIDES */
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-            gap: 10px;
-            margin-bottom: 14px;
-        }
-
-        .metric-card {
-            background: var(--bg-card);
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            text-align: center;
-        }
-        .metric-card .label {
-            font-size: 11px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-        }
-        .metric-card .value {
-            font-size: 16px;
-            font-weight: bold;
-            margin-top: 4px;
-            color: var(--primary);
-        }
-
-        /* GRILLE DES 11 CRITÈRES (PASSEPORT NUMÉRIQUE) */
-        .criteria-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 10px;
-            margin-bottom: 14px;
-        }
-
+        .criteria-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); gap: 8px; margin-bottom: 14px; }
         .crit-btn {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            color: var(--text-main);
-            padding: 12px;
-            border-radius: 8px;
-            text-align: left;
-            cursor: pointer;
-            transition: 0.2s;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
+            background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main);
+            padding: 10px; border-radius: 8px; text-align: left; cursor: pointer; display: flex; flex-direction: column; gap: 3px;
         }
-        .crit-btn:hover, .crit-btn.active {
-            border-color: var(--primary);
-            background: var(--bg-hover);
-        }
-        .crit-btn .crit-num {
-            font-size: 11px;
-            color: var(--primary);
-            font-weight: bold;
-        }
-        .crit-btn .crit-name {
-            font-size: 13px;
-            font-weight: 600;
-        }
+        .crit-btn:hover, .crit-btn.active { border-color: var(--primary); background: var(--bg-hover); }
+        .crit-btn .crit-num { font-size: 10px; color: var(--primary); font-weight: bold; }
+        .crit-btn .crit-name { font-size: 12px; font-weight: 600; }
 
-        /* ZONE DE DÉTAIL DU CRITÈRE SÉLECTIONNÉ */
-        .detail-box {
-            background: var(--bg-card);
-            border: 1px solid var(--primary);
-            border-radius: 10px;
-            padding: 16px;
-            min-height: 110px;
-        }
-        .detail-box h3 {
-            color: var(--primary);
-            font-size: 15px;
-            margin-bottom: 8px;
-        }
-        .detail-box p {
-            font-size: 14px;
-            line-height: 1.5;
-            color: var(--text-main);
-        }
+        .detail-box { background: var(--bg-card); border: 1px solid var(--primary); border-radius: 10px; padding: 14px; min-height: 100px; }
+        .detail-box h3 { color: var(--primary); font-size: 15px; margin-bottom: 6px; }
+        .detail-box p { font-size: 13.5px; line-height: 1.5; white-space: pre-line; }
 
-        /* ONGLET 2 : DIAGNOSTIC & DÉMONTAGE */
-        .diag-section {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 16px;
-            margin-bottom: 14px;
-        }
-        .diag-section h3 {
-            color: var(--primary);
-            margin-bottom: 10px;
-            font-size: 16px;
-        }
-        .alert-box {
-            background: rgba(239, 68, 68, 0.15);
-            border-left: 4px solid var(--danger);
-            padding: 10px 12px;
-            border-radius: 4px;
-            margin-bottom: 14px;
-            font-size: 13px;
-        }
-        .steps-list {
-            padding-left: 20px;
-            line-height: 1.7;
-            font-size: 14px;
-        }
-        .state-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 12px;
-        }
-        .state-btn {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            color: #fff;
-            font-size: 14px;
-            opacity: 0.85;
-            transition: 0.2s;
-        }
-        .state-btn:hover {
-            opacity: 1;
-            transform: translateY(-2px);
-        }
+        .diag-section { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 12px; }
+        .diag-section h3 { color: var(--primary); margin-bottom: 8px; font-size: 15px; }
+        .alert-box { background: rgba(239, 68, 68, 0.15); border-left: 4px solid var(--danger); padding: 10px 12px; border-radius: 4px; margin-bottom: 12px; font-size: 13px; }
+        .steps-list { padding-left: 20px; line-height: 1.6; font-size: 13.5px; }
+        .state-buttons { display: flex; gap: 8px; margin-top: 10px; }
+        .state-btn { flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: #fff; font-size: 13px; }
         .btn-ok { background: var(--success); }
         .btn-warn { background: var(--warning); color: #000; }
         .btn-err { background: var(--danger); }
 
-        /* ONGLET 3 : BLOC-NOTES TECHNIQUE */
-        .note-form {
-            background: var(--bg-card);
-            padding: 16px;
-            border-radius: 10px;
-            border: 1px solid var(--border);
-            margin-bottom: 14px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .note-form input, .note-form select, .note-form textarea {
-            width: 100%;
-            padding: 10px;
-            border-radius: 6px;
-            border: 1px solid var(--border);
-            background: var(--bg-dark);
-            color: var(--text-main);
-            font-size: 14px;
-        }
-        .btn-row {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .action-btn {
-            background: var(--primary);
-            color: #000;
-            border: none;
-            padding: 10px 16px;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 13px;
-        }
-        .action-btn.secondary {
-            background: var(--bg-hover);
-            color: var(--text-main);
-        }
-        .notes-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .note-item {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            padding: 12px;
-            border-radius: 8px;
-        }
-        .note-item .note-meta {
-            font-size: 11px;
-            color: var(--text-muted);
-            margin-bottom: 4px;
-        }
-        .note-item .note-tag {
-            display: inline-block;
-            background: var(--primary);
-            color: #000;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: bold;
-            margin-right: 6px;
-        }
+        .note-form { background: var(--bg-card); padding: 14px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px; }
+        .note-form input, .note-form select, .note-form textarea { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main); font-size: 13px; }
+        .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+        .action-btn { background: var(--primary); color: #000; border: none; padding: 9px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; }
+        .action-btn.secondary { background: var(--bg-hover); color: var(--text-main); }
+        .notes-list { display: flex; flex-direction: column; gap: 8px; }
+        .note-item { background: var(--bg-card); border: 1px solid var(--border); padding: 10px; border-radius: 8px; font-size: 13px; }
+        .note-item .note-meta { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
+        .note-item .note-tag { display: inline-block; background: var(--primary); color: #000; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-right: 6px; }
     </style>
 </head>
 <body>
 
-    <!-- BARRE DE SIMULATION RAPIDE (POUR TESTER SUR PC SANS 3DEXPERIENCE) -->
     <div class="sim-bar">
-        <span>🛠️ Mode Test PC :</span>
-        <button class="sim-btn" onclick="chargerPiece('ensemble_buse')">Tête complète</button>
-        <button class="sim-btn" onclick="chargerPiece('buse_laiton')">Buse Laiton</button>
-        <button class="sim-btn" onclick="chargerPiece('bloc_chauffe')">Bloc de Chauffe</button>
-        <button class="sim-btn" onclick="chargerPiece('isolateur_ptfe')">Isolateur PTFE</button>
-        <button class="sim-btn" onclick="chargerPiece('ventilateurs')">Ventilateurs</button>
+        <span>🛠️ Simuler un clic CATIA :</span>
+        <select class="sim-select" id="selectPieceTest" onchange="recevoirMessage3DX(this.value)">
+            <option value="PRINTHEAD">Chargement du CSV...</option>
+        </select>
+        <span class="csv-status" id="statutCSV">⏳ Lecture CSV...</span>
     </div>
 
-    <!-- EN-TÊTE DE LA PIÈCE SÉLECTIONNÉE -->
     <div class="header">
         <div class="piece-title-box">
+            <div class="ref-row">
+                <span class="ref-badge" id="badgeRef">RÉF. #----</span>
+                <span class="cad-badge" id="badgeCAO">Acteur CATIA : --</span>
+            </div>
             <h1 id="nomPiece">Chargement...</h1>
-            <p id="sousTitrePiece">Sous-ensemble tête d'impression Ultimaker 2+</p>
+            <p id="sousTitrePiece">Catalogue Officiel Ultimaker 2+</p>
         </div>
         <div id="badgeEtat" class="status-badge">État : Non contrôlé</div>
     </div>
 
-    <!-- NAVIGATION ENTRE LES 3 PAGES FUSIONNÉES -->
     <div class="tabs">
-        <button class="tab-btn active" onclick="changerOnglet('infos', this)">📋 1. Fiche Technique</button>
-        <button class="tab-btn" onclick="changerOnglet('diagnostic', this)">🔧 2. Diagnostic & Démontage</button>
+        <button class="tab-btn active" onclick="changerOnglet('infos', this)">📋 1. Passeport</button>
+        <button class="tab-btn" onclick="changerOnglet('diagnostic', this)">🔧 2. Diagnostic</button>
         <button class="tab-btn" onclick="changerOnglet('notes', this)">📝 3. Bloc-Notes</button>
     </div>
 
-    <!-- ==================== ONGLET 1 : FICHE TECHNIQUE ==================== -->
     <div id="tab-infos" class="tab-content active">
         <div class="metrics-grid">
-            <div class="metric-card">
-                <div class="label">Masse</div>
-                <div class="value" id="valPoids">--</div>
-            </div>
-            <div class="metric-card">
-                <div class="label">Matériau</div>
-                <div class="value" id="valMateriau">--</div>
-            </div>
-            <div class="metric-card">
-                <div class="label">Temps Démontage</div>
-                <div class="value" id="valTemps">--</div>
-            </div>
-            <div class="metric-card">
-                <div class="label">Indice Réparabilité</div>
-                <div class="value" id="valIndice">--</div>
-            </div>
+            <div class="metric-card"><div class="label">N° Réf</div><div class="value" id="valRef">--</div></div>
+            <div class="metric-card"><div class="label">Masse Estimée</div><div class="value" id="valPoids">--</div></div>
+            <div class="metric-card"><div class="label">Matériau</div><div class="value" id="valMateriau">Standard</div></div>
+            <div class="metric-card"><div class="label">Indice</div><div class="value" id="valIndice">8.0 / 10</div></div>
         </div>
-
-        <!-- Les 11 critères du Passeport Numérique -->
         <div class="criteria-grid" id="grilleCriteres"></div>
-
-        <!-- Détail du critère cliqué -->
         <div class="detail-box">
-            <h3 id="titreCritere">Sélectionnez un critère ci-dessus</h3>
-            <p id="texteCritere">Cliquez sur l'une des 11 catégories pour afficher les données du passeport numérique de la pièce.</p>
+            <h3 id="titreCritere">Sélectionnez un critère</h3>
+            <p id="texteCritere">--</p>
         </div>
     </div>
 
-    <!-- ==================== ONGLET 2 : DIAGNOSTIC ==================== -->
     <div id="tab-diagnostic" class="tab-content">
-        <div class="alert-box" id="alerteSecurite">
-            ⚠️ Attention : Vérifiez que la buse est refroidie (< 30°C) avant toute manipulation.
-        </div>
-
+        <div class="alert-box" id="alerteSecurite">⚠️ Vérifier la température et couper l'alimentation avant intervention.</div>
+        <div class="diag-section"><h3>🔩 Outillage requis</h3><p id="outilsRequis">Clé Allen 2.0 mm, Clé à douille 7 mm.</p></div>
+        <div class="diag-section"><h3>📖 Gamme de démontage</h3><ol class="steps-list" id="listeEtapes"></ol></div>
         <div class="diag-section">
-            <h3>🔩 Outillage requis</h3>
-            <p id="outilsRequis">--</p>
-        </div>
-
-        <div class="diag-section">
-            <h3>📖 Gamme de démontage pas-à-pas</h3>
-            <ol class="steps-list" id="listeEtapes"></ol>
-        </div>
-
-        <div class="diag-section">
-            <h3>🩺 Déclarer l'état de la pièce (Fin de diagnostic)</h3>
+            <h3>🩺 Déclarer l'état</h3>
             <div class="state-buttons">
-                <button class="state-btn btn-ok" onclick="definirEtat('Opérationnel (Réemployable)', '#22c55e')">✅ Opérationnel</button>
-                <button class="state-btn btn-warn" onclick="definirEtat('Usé (À reconditionner)', '#eab308')">⚠️ Usé / À nettoyer</button>
-                <button class="state-btn btn-err" onclick="definirEtat('Défectueux (À recycler)', '#ef4444')">❌ Défectueux</button>
+                <button class="state-btn btn-ok" onclick="definirEtat('Opérationnel', '#22c55e')">✅ Opérationnel</button>
+                <button class="state-btn btn-warn" onclick="definirEtat('Usé', '#eab308')">⚠️ Usé</button>
+                <button class="state-btn btn-err" onclick="definirEtat('À remplacer', '#ef4444')">❌ À remplacer</button>
             </div>
         </div>
     </div>
 
-    <!-- ==================== ONGLET 3 : BLOC-NOTES ==================== -->
     <div id="tab-notes" class="tab-content">
         <div class="note-form">
-            <input type="text" id="noteAuteur" placeholder="Nom de l'opérateur (ex: Jean Dupont)">
+            <input type="text" id="noteAuteur" placeholder="Nom de l'opérateur">
             <select id="noteTag">
-                <option value="Observation">🔍 Observation générale</option>
-                <option value="Usure">⚠️ Trace d'usure / Calamine</option>
-                <option value="Blocage">🔩 Vis grippée / Démontage difficile</option>
-                <option value="Rétrofit">♻️ Idée d'amélioration / Rétrofit</option>
+                <option value="Observation">🔍 Observation</option>
+                <option value="Usure">⚠️ Trace d'usure</option>
+                <option value="Commande SAV">🛒 Pièce à commander</option>
             </select>
-            <textarea id="noteTexte" rows="3" placeholder="Saisissez votre observation sur la pièce sélectionnée..."></textarea>
+            <textarea id="noteTexte" rows="3" placeholder="Votre observation..."></textarea>
             <div class="btn-row">
-                <button class="action-btn" onclick="ajouterNote()">💾 Enregistrer la note</button>
-                <button class="action-btn secondary" onclick="exporterWord()">📄 Exporter le rapport (.doc)</button>
+                <button class="action-btn" onclick="ajouterNote()">💾 Enregistrer</button>
+                <button class="action-btn secondary" onclick="exporterWord()">📄 Exporter (.doc)</button>
             </div>
         </div>
-
         <div class="notes-list" id="listeNotes"></div>
     </div>
 
-    <!-- ==================== SCRIPT JAVASCRIPT ==================== -->
     <script>
-        /* =========================================================================
-           1. BASE DE DONNÉES DES PIÈCES DE LA BUSE (Facile à modifier comme du Word)
-           ========================================================================= */
-        const baseDeDonnees = {
-            "ensemble_buse": {
-                nom: "Ensemble Tête d'Impression (Buse complète)",
-                sousTitre: "Module d'extrusion Olsson Block - Ultimaker 2+",
-                poids: "285 g",
-                materiau: "Multi-matériaux",
-                temps: "12 min",
-                indice: "8.5 / 10",
-                securite: "⚠️ Risque de brûlure grave (jusqu'à 260°C) et pincement électrique (24V). Couper l'alimentation avant intervention.",
-                outils: "Tournevis Hexagonal (Allen) 2.0 mm, Clé à douille 7 mm, Pince plate.",
-                etapes: [
-                    "Effectuer un retrait du filament ( procédure 'Material Remove' ) puis éteindre l'imprimante.",
-                    "Dévisser les 4 vis du carénage métallique des ventilateurs avec la clé Allen 2 mm.",
-                    "Extraire le tube de guidage PTFE en appuyant sur la bague de verrouillage (Bowden clamp).",
-                    "Séparer le bloc Olsson et déconnecter délicatement la sonde PT100 et la cartouche chauffante."
-                ],
-                criteres: {
-                     fonction: "Assurer la fusion du filament polymère et son dépôt précis couche par couche suivi d'un refroidissement contrôlé.",
-                     materiau: "Assemblage d'acier inoxydable (carénage), aluminium (dissipateur), laiton (bloc/buse) et PTFE (isolateur).",
-                     fixation: "4 vis M3 cruciformes/Allen sur chariots X/Y + assemblage fileté pour la buse.",
-                     fabrication: "Tôlerie pliée (carénage), usinage CNC (bloc Olsson et buse) et moulage par injection (ventilateurs).",
-                     geometrie: "Encombrement : 65 x 55 x 75 mm. Masse totale : 285 g.",
-                     environnement: "Impact modéré. Le recyclage nécessite de séparer les métaux cuivreux (laiton) de l'électronique (ventilateurs/sondes).",
-                     dangerosite: "Haute température en fonctionnement (260°C). Présence possible de résidus de polymères dégradés (COV).",
-                     inflammabilite: "Faible (composants métalliques), seuls les ventilateurs en ABS et gaines de câbles sont combustibles.",
-                     fluides_elec: "Alimentation 24V DC (cartouche chauffante 35W + 3 ventilateurs) et sonde de température PT100.",
-                     mobilite: "Guidage linéaire sur deux axes perpendiculaires (tiges lisses Ø6 mm).",
-                     historique: "Modèle Olsson Block (mise à niveau standard permettant de changer uniquement le gicleur en laiton)."
-                }
-            },
+        let catalogueRef = {};
 
-            "buse_laiton": {
-                nom: "Gicleur / Buse interchangeable (0.4 mm)",
-                sousTitre: "Composant terminal d'extrusion (Nozzle)",
-                poids: "4 g",
-                materiau: "Laiton CuZn39Pb3",
-                temps: "2 min",
-                indice: "9.5 / 10",
-                securite: "⚠️ Le dévissage de la buse s'effectue souvent à chaud (180°C) pour ramollir le plastique : port de gants thermiques obligatoire.",
-                outils: "Clé à douille 7 mm (ou clé dynamométrique réglée à 1.5 Nm).",
-                etapes: [
-                    "Chauffer la buse à 180°C pour ramollir les résidus de PLA/ABS dans le filetage.",
-                    "Maintenir le bloc de chauffe avec une clé plate pour éviter de tordre les tiges.",
-                    "Dévisser la buse dans le sens inverse des aiguilles d'une montre avec la douille de 7 mm."
-                ],
-                criteres: {
-                    fonction: "Calibrer le diamètre d'extrusion du filament fondu (0.25, 0.4, 0.6 ou 0.8 mm).",
-                    materiau: "Alliage de laiton à haute conductivité thermique (100% recyclable en filière métaux non-ferreux).",
-                    fixation: "Filetage métrique M6 x 1.0 vissé directement dans le bloc Olsson.",
-                    fabrication: "Décolletage de précision et micro-perçage calibré.",
-                    geometrie: "Six pans de 7 mm, longueur totale 12.5 mm, masse 4 g.",
-                    environnement: "Empreinte carbone très faible (pièce d'usure standardisée, refonte directe possible).",
-                    dangerosite: "Risque de brûlure lors de la manipulation à chaud.",
-                    inflammabilite: "Nulle (100% métallique incombustible).",
-                    fluides_elec: "Aucune connexion électrique. Traverse de polymère à l'état visqueux.",
-                    mobilite: "Démontage très rapide par simple dévissage inférieur sans démonter toute la tête.",
-                    historique: "Pièce d'usure principale : à remplacer toutes les 500 heures ou en cas d'utilisation de filaments abrasifs (carbone)."
-                }
-            },
-
-            "bloc_chauffe": {
-                nom: "Bloc de Chauffe (Olsson Block) + Sondes",
-                sousTitre: "Corps thermique avec cartouche 35W et sonde PT100",
-                poids: "28 g",
-                materiau: "Laiton / Inox",
-                temps: "8 min",
-                indice: "7.0 / 10",
-                securite: "⚠️ Câbles de la cartouche 35W et de la sonde PT100 très fragiles : ne jamais tirer sur les fils lors de l'extraction.",
-                outils: "Tournevis plat fin (vis sans tête M3), Clé plate de maintien.",
-                etapes: [
-                    "Dévisser la buse en laiton pour libérer le serrage axial du bloc Olsson.",
-                    "Desserrer les deux petites vis sans tête (vis pointeau) situées sous le bloc.",
-                    "Faire glisser délicatement hors de leurs logements la cartouche chauffante (gros câbles) et la sonde PT100 (petits câbles)."
-                ],
-                criteres: {
-                    fonction: "Transférer l'énergie thermique de la résistance électrique vers la buse et mesurer la température en continu.",
-                    materiau: "Bloc en laiton usiné, fourreau de sonde et cartouche en acier inoxydable.",
-                    fixation: "Maintien par serrage de la buse contre le coupleur + 2 vis pointeau M3 pour les sondes.",
-                    fabrication: "Fraisage CNC et perçages transversaux H7.",
-                    geometrie: "Parallélépipède 20 x 16 x 11.5 mm. Masse : 28 g.",
-                    environnement: "Séparation impérative des câbles électriques (filière DEEE) et du bloc métallique avant recyclage.",
-                    dangerosite: "Point le plus chaud de la machine. Risque de court-circuit si l'isolant fibre de verre des câbles est endommagé.",
-                    inflammabilite: "Nulle pour le bloc, mais une défaillance de la sonde PT100 peut provoquer un emballement thermique.",
-                    fluides_elec: "Cartouche chauffante 24V - 35W et capteur résistif platine PT100.",
-                    mobilite: "Accès aux vis de serrage parfois gêné par des résidus de plastique brûlé (calamine).",
-                    historique: "Vérifier régulièrement le serrage des vis pointeau pour éviter les erreurs 'Heater Error' à l'écran."
-                }
-            },
-
-            "isolateur_ptfe": {
-                nom: "Coupleur Isolateur PTFE (TFM Coupler)",
-                sousTitre: "Barrière thermique entre zone froide et zone chaude",
-                poids: "6 g",
-                materiau: "PTFE modifié (TFM)",
-                temps: "6 min",
-                indice: "6.5 / 10",
-                securite: "⚠️ Ne jamais dépasser 260°C : au-delà, le PTFE se dégrade et peut émettre des vapeurs fluorées irritantes.",
-                outils: "Démontage manuel après retrait du carénage supérieur et du ressort.",
-                etapes: [
-                    "Retirer le tube Bowden et le clip de maintien supérieur.",
-                    "Dévisser les 4 longues vis d'assemblage de la tête pour relâcher la pression du ressort.",
-                    "Extraire le cylindre blanc en PTFE par le haut de la tête d'impression."
-                ],
-                criteres: {
-                    fonction: "Isoler thermiquement le haut de la tête pour empêcher le filament de fondre trop tôt (bouchage par 'Heat Creep').",
-                    materiau: "Polytétrafluoroéthylène modifié (TFM 1600) à faible fluage thermique.",
-                    fixation: "Maintenu en compression axiale par un ressort en acier entre le bloc chaud et le dissipateur.",
-                    fabrication: "Tournage de précision dans un barreau de polymère technique.",
-                    geometrie: "Cylindre épaulé Ø12 mm, canal interne Ø3.2 mm. Masse : 6 g.",
-                    environnement: "Polymère fluoré non recyclable par fusion classique (filière de valorisation énergétique spécialisée).",
-                    dangerosite: "Sûr à froid. Toxique en cas de surchauffe accidentelle (> 280°C).",
-                    inflammabilite: "Auto-extinguible (Indice d'inflammabilité UL94 V-0).",
-                    fluides_elec: "Isolant électrique et thermique parfait.",
-                    mobilite: "Dépose simple dès que la précontrainte du ressort est libérée.",
-                    historique: "Se déforme progressivement à la base au bout de 300 à 400 heures d'impression haute température : à inspecter visuellement."
-                }
-            },
-
-            "ventilateurs": {
-                nom: "Carénage & Ventilateurs de refroidissement",
-                sousTitre: "2 ventilateurs latéraux (pièce) + 1 ventilateur arrière (dissipateur)",
-                poids: "115 g",
-                materiau: "Inox & Plastique ABS",
-                temps: "5 min",
-                indice: "8.0 / 10",
-                securite: "⚠️ Couper l'alimentation pour éviter de casser une pale de ventilateur en rotation avec la clé Allen.",
-                outils: "Tournevis Hexagonal (Allen) 2.0 mm.",
-                etapes: [
-                    "Dévisser les 4 vis latérales M3 fixant le support métallique sur la tête.",
-                    "Déclipser les connecteurs 2 broches des ventilateurs ou ouvrir la gaine tressée.",
-                    "Dévisser les 2 petites vis de chaque ventilateur 30x30 mm pour les séparer de la tôle inox."
-                ],
-                criteres: {
-                    fonction: "Refroidir immédiatement le plastique déposé (ventilateurs latéraux) et refroidir la zone de transition PTFE (ventilateur arrière).",
-                    materiau: "Support en tôle d'acier inoxydable pliée ; corps des ventilateurs en polymère ABS et bobinage cuivre.",
-                    fixation: "Vis métriques M3 sur le corps de tête et vis M2.5 sur les carters de ventilateurs.",
-                    fabrication: "Découpe laser et pliage (carénage) + injection plastique (ventilateurs).",
-                    geometrie: "Ventilateurs axiaux 30 x 30 x 10 mm. Masse de l'ensemble : 115 g.",
-                    environnement: "Le carénage inox est 100% recyclable ; les ventilateurs vont en filière DEEE.",
-                    dangerosite: "Risque mécanique mineur (pales) et encrassement par poussières ou fils de plastique ('cheveux d'ange').",
-                    inflammabilite: "Modérée (carters en plastique ABS).",
-                    fluides_elec: "Alimentation 24V DC (ventilateurs latéraux pilotés en PWM, ventilateur arrière actif dès 40°C).",
-                    mobilite: "Très accessible : c'est la première pièce extérieure à retirer lors de la maintenance.",
-                    historique: "Un ventilateur arrière en panne provoque un bouchage immédiat de la buse en moins de 5 minutes."
-                }
+        // Gammes génériques par défaut pour les pièces du catalogue
+        const fichesGeneriques = {
+            etapes: [
+                "Isoler la zone d'intervention et couper l'alimentation électrique si nécessaire.",
+                "Dévisser les éléments de fixation en conservant la visserie dans le bac de tri.",
+                "Extraire délicatement la pièce et inspecter l'état des surfaces de contact."
+            ],
+            criteres: {
+                fonction: "Assurer la liaison mécanique, thermique ou fonctionnelle au sein du sous-ensemble de la machine.",
+                fixation: "Assemblage standardisé par vis métriques ou emboîtement direct.",
+                fabrication: "Usinage ou injection plastique conforme au cahier des charges Ultimaker.",
+                environnement: "Recyclable selon la filière adaptée (métaux / polymères techniques).",
+                dangerosite: "Aucun danger particulier hors manipulation de pièces mécaniques.",
+                inflammabilite: "Faible ou auto-extinguible selon le matériau.",
+                fluides_elec: "Composant passif ou actif selon son intégration dans le module.",
+                mobilite: "Démontable lors de la maintenance préventive ou corrective.",
+                historique: "Référence issue du catalogue officiel des pièces détachées."
             }
         };
 
-        // Noms des 11 critères officiels du passeport numérique
         const libellesCriteres = [
             { cle: "fonction", num: "01", titre: "Rôle fonctionnel" },
             { cle: "materiau", num: "02", titre: "Matériau" },
-            { cle: "fixation", num: "03", titre: "Méthode de fixation" },
-            { cle: "fabrication", num: "04", titre: "Procédé fabrication" },
-            { cle: "geometrie", num: "05", titre: "Géométrie & Masse" },
-            { cle: "environnement", num: "06", titre: "Impact Environnemental" },
-            { cle: "dangerosite", num: "07", titre: "Dangerosité / Sécurité" },
+            { cle: "fixation", num: "03", titre: "Fixation" },
+            { cle: "fabrication", num: "04", titre: "Fabrication" },
+            { cle: "geometrie", num: "05", titre: "Géométrie & Réf" },
+            { cle: "environnement", num: "06", titre: "Environnement" },
+            { cle: "dangerosite", num: "07", titre: "Sécurité" },
             { cle: "inflammabilite", num: "08", titre: "Inflammabilité" },
-            { cle: "fluides_elec", num: "09", titre: "Électricité & Fluides" },
-            { cle: "mobilite", num: "10", titre: "Mobilité au démontage" },
+            { cle: "fluides_elec", num: "09", titre: "Électricité / Fluides" },
+            { cle: "mobilite", num: "10", titre: "Mobilité" },
             { cle: "historique", num: "11", titre: "Historique & Notes" }
         ];
 
-        // Variables d'état
-        let pieceActuelle = "ensemble_buse";
+        let codePieceActuel = "PRINTHEAD";
+        let nomCAORecu = "PRINTHEAD";
         let critereActuel = "fonction";
         let etatsPieces = {};
         let notesLocales = JSON.parse(localStorage.getItem("notes_buse_ihs")) || [];
         const FIREBASE_URL = "https://ensamstagem1-default-rtdb.europe-west1.firebasedatabase.app/notes_buse.json";
 
-        /* =========================================================================
-           2. FONCTIONS D'AFFICHAGE ET DE NAVIGATION
-           ========================================================================= */
+        async function chargerCatalogueCSV() {
+            const badgeCSV = document.getElementById("statutCSV");
+            try {
+                const reponse = await fetch("catalogue_ultimaker.csv?t=" + new Date().getTime());
+                if (!reponse.ok) throw new Error("CSV introuvable");
+
+                const texte = await reponse.text();
+                const lignes = texte.split(/\r?\n/);
+
+                for (let i = 1; i < lignes.length; i++) {
+                    if (!lignes[i].trim()) continue;
+                    const col = lignes[i].split(";");
+                    if (col.length >= 2) {
+                        const ref = col[0].trim();
+                        const nom = col[1].trim();
+                        catalogueRef[ref] = {
+                            ref: ref === "PRINTHEAD" ? "PRINTHEAD" : "#" + ref,
+                            nomOfficiel: nom
+                        };
+                    }
+                }
+
+                remplirMenuSimulation();
+                badgeCSV.textContent = `✅ ${Object.keys(catalogueRef).length} pièces chargées`;
+                recevoirMessage3DX("PRINTHEAD");
+            } catch (e) {
+                badgeCSV.textContent = "⚠️ Erreur chargement CSV";
+                badgeCSV.style.background = "rgba(239, 68, 68, 0.2)";
+                badgeCSV.style.color = "#f87171";
+            }
+        }
+
+        function remplirMenuSimulation() {
+            const select = document.getElementById("selectPieceTest");
+            select.innerHTML = "";
+            for (const ref in catalogueRef) {
+                const item = catalogueRef[ref];
+                const opt = document.createElement("option");
+                opt.value = ref === "PRINTHEAD" ? "PRINTHEAD" : `mael_Original ultimakerCS_${ref}-A A`;
+                opt.textContent = `[${item.ref}] ${item.nomOfficiel}`;
+                select.appendChild(opt);
+            }
+        }
+
+        function extraireRefDepuisNomCATIA(nomBrut) {
+            if (!nomBrut) return "PRINTHEAD";
+            const texte = nomBrut.trim();
+            const match4 = texte.match(/(?:_|^|\b)(\d{4})(?:-|_|\b)/);
+            if (match4 && catalogueRef[match4[1]]) return match4[1];
+            if (catalogueRef[texte]) return texte;
+            return "PRINTHEAD";
+        }
+
         function changerOnglet(idOnglet, boutonClique) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
@@ -616,37 +275,32 @@
             boutonClique.classList.add('active');
         }
 
-        function chargerPiece(identifiant, donneesDynamiques = null) {
-            // Correspondance souple si 3DEXPERIENCE envoie "buse" comme dans le projet de Miguel
-            if (identifiant === "buse") identifiant = "ensemble_buse";
+        function recevoirMessage3DX(messageBrut) {
+            nomCAORecu = messageBrut;
+            const codeExtrait = extraireRefDepuisNomCATIA(messageBrut);
+            chargerPieceParCode(codeExtrait);
+        }
 
-            if (!baseDeDonnees[identifiant]) {
-                console.warn("Pièce inconnue reçue de 3DEXPERIENCE :", identifiant);
-                return;
-            }
+        function chargerPieceParCode(code) {
+            if (!catalogueRef[code]) code = "PRINTHEAD";
+            if (!catalogueRef[code]) return;
 
-            pieceActuelle = identifiant;
-            const piece = baseDeDonnees[identifiant];
+            codePieceActuel = code;
+            const info = catalogueRef[code];
 
-            // Si 3DEXPERIENCE envoie des propriétés CAO en direct (masse, matériau), on met à jour !
-            if (donneesDynamiques) {
-                if (donneesDynamiques.masse) piece.poids = donneesDynamiques.masse;
-                if (donneesDynamiques.materiau) piece.materiau = donneesDynamiques.materiau;
-            }
+            document.getElementById("badgeRef").textContent = "RÉF. " + info.ref;
+            document.getElementById("badgeCAO").textContent = "Acteur : " + nomCAORecu;
+            document.getElementById("nomPiece").textContent = info.nomOfficiel;
+            document.getElementById("sousTitrePiece").textContent = "Référence extraite du catalogue officiel";
 
-            // Mise à jour de l'en-tête et des métriques
-            document.getElementById("nomPiece").textContent = piece.nom;
-            document.getElementById("sousTitrePiece").textContent = piece.sousTitre;
-            document.getElementById("valPoids").textContent = piece.poids;
-            document.getElementById("valMateriau").textContent = piece.materiau;
-            document.getElementById("valTemps").textContent = piece.temps;
-            document.getElementById("valIndice").textContent = piece.indice;
+            document.getElementById("valRef").textContent = info.ref;
+            document.getElementById("valPoids").textContent = "Calcul CAO";
+            document.getElementById("valMateriau").textContent = "Standard";
 
-            // Mise à jour du badge d'état
             const badge = document.getElementById("badgeEtat");
-            if (etatsPieces[identifiant]) {
-                badge.textContent = "État : " + etatsPieces[identifiant].texte;
-                badge.style.background = etatsPieces[identifiant].couleur;
+            if (etatsPieces[code]) {
+                badge.textContent = "État : " + etatsPieces[code].texte;
+                badge.style.background = etatsPieces[code].couleur;
                 badge.style.color = "#000";
             } else {
                 badge.textContent = "État : Non contrôlé";
@@ -654,18 +308,14 @@
                 badge.style.color = "#f8fafc";
             }
 
-            // Mise à jour de l'onglet Diagnostic
-            document.getElementById("alerteSecurite").textContent = piece.securite;
-            document.getElementById("outilsRequis").textContent = piece.outils;
             const listeEtapes = document.getElementById("listeEtapes");
             listeEtapes.innerHTML = "";
-            piece.etapes.forEach(etape => {
+            fichesGeneriques.etapes.forEach(e => {
                 const li = document.createElement("li");
-                li.textContent = etape;
+                li.textContent = e;
                 listeEtapes.appendChild(li);
             });
 
-            // Génération des 11 boutons de critères
             genererGrilleCriteres();
             afficherDetailCritere(critereActuel);
             afficherNotes();
@@ -677,7 +327,7 @@
             libellesCriteres.forEach(item => {
                 const btn = document.createElement("button");
                 btn.className = "crit-btn" + (item.cle === critereActuel ? " active" : "");
-                btn.innerHTML = `<span class="crit-num">CRITÈRE ${item.num}</span><span class="crit-name">${item.titre}</span>`;
+                btn.innerHTML = `<span class="crit-num">CRITère ${item.num}</span><span class="crit-name">${item.titre}</span>`;
                 btn.onclick = () => afficherDetailCritere(item.cle);
                 grille.appendChild(btn);
             });
@@ -686,43 +336,43 @@
         function afficherDetailCritere(cle) {
             critereActuel = cle;
             genererGrilleCriteres();
-            const piece = baseDeDonnees[pieceActuelle];
+            const info = catalogueRef[codePieceActuel];
+            if (!info) return;
             const infoCritere = libellesCriteres.find(c => c.cle === cle);
 
-            document.getElementById("titreCritere").textContent = `${infoCritere.num}. ${infoCritere.titre}`;
-            let texte = piece.criteres[cle];
+            document.getElementById("titreCritere").textContent = `${infoCritere.num}. ${infoCritere.titre} — [${info.ref}]`;
+            
+            let texte = "";
+            if (cle === "geometrie") {
+                texte = `Référence catalogue : ${info.ref}\nNom officiel : ${info.nomOfficiel}\nInstance CATIA détectée : ${nomCAORecu}`;
+            } else {
+                texte = fichesGeneriques.criteres[cle];
+            }
 
-            // Si c'est le critère 11 (Historique), on ajoute aussi les notes prises par les opérateurs
             if (cle === "historique") {
-                const notesDeLaPiece = notesLocales.filter(n => n.piece === pieceActuelle);
+                const notesDeLaPiece = notesLocales.filter(n => n.code === codePieceActuel);
                 if (notesDeLaPiece.length > 0) {
-                    texte += "\n\n📌 DERNIÈRES NOTES OPÉRATEURS : " + notesDeLaPiece.map(n => `[${n.tag}] ${n.texte} (${n.auteur})`).join(" | ");
+                    texte += "\n\n📌 NOTES OPÉRATEURS : " + notesDeLaPiece.map(n => `[${n.tag}] ${n.texte} (${n.auteur})`).join(" | ");
                 }
             }
             document.getElementById("texteCritere").textContent = texte;
         }
 
         function definirEtat(texteEtat, couleurHex) {
-            etatsPieces[pieceActuelle] = { texte: texteEtat, couleur: couleurHex };
-            chargerPiece(pieceActuelle);
+            etatsPieces[codePieceActuel] = { texte: texteEtat, couleur: couleurHex };
+            chargerPieceParCode(codePieceActuel);
         }
 
-        /* =========================================================================
-           3. GESTION DU BLOC-NOTES & EXPORT WORD
-           ========================================================================= */
         function ajouterNote() {
-            const auteur = document.getElementById("noteAuteur").value.trim() || "Opérateur Anonyme";
+            const auteur = document.getElementById("noteAuteur").value.trim() || "Opérateur";
             const tag = document.getElementById("noteTag").value;
             const texte = document.getElementById("noteTexte").value.trim();
+            if (!texte || !catalogueRef[codePieceActuel]) return;
 
-            if (!texte) {
-                alert("Veuillez écrire une observation avant d'enregistrer.");
-                return;
-            }
-
+            const info = catalogueRef[codePieceActuel];
             const nouvelleNote = {
-                piece: pieceActuelle,
-                nomPiece: baseDeDonnees[pieceActuelle].nom,
+                code: codePieceActuel,
+                nomPiece: `${info.ref} - ${info.nomOfficiel}`,
                 auteur: auteur,
                 tag: tag,
                 texte: texte,
@@ -731,12 +381,7 @@
 
             notesLocales.unshift(nouvelleNote);
             localStorage.setItem("notes_buse_ihs", JSON.stringify(notesLocales));
-
-            // Envoi silencieux vers le Firebase de Miguel
-            fetch(FIREBASE_URL, {
-                method: "POST",
-                body: JSON.stringify(nouvelleNote)
-            }).catch(() => {});
+            fetch(FIREBASE_URL, { method: "POST", body: JSON.stringify(nouvelleNote) }).catch(() => {});
 
             document.getElementById("noteTexte").value = "";
             afficherNotes();
@@ -746,17 +391,15 @@
         function afficherNotes() {
             const conteneur = document.getElementById("listeNotes");
             conteneur.innerHTML = "";
-
             if (notesLocales.length === 0) {
-                conteneur.innerHTML = "<p style='color:#94a3b8; font-size:13px;'>Aucune note enregistrée pour le moment.</p>";
+                conteneur.innerHTML = "<p style='color:#94a3b8; font-size:12px;'>Aucune note.</p>";
                 return;
             }
-
             notesLocales.forEach(n => {
                 const div = document.createElement("div");
                 div.className = "note-item";
                 div.innerHTML = `
-                    <div class="note-meta">${n.date} — Par <strong>${n.auteur}</strong> sur <em>${n.nomPiece}</em></div>
+                    <div class="note-meta">${n.date} — <strong>${n.auteur}</strong> sur <strong>${n.nomPiece}</strong></div>
                     <div><span class="note-tag">${n.tag}</span>${n.texte}</div>
                 `;
                 conteneur.appendChild(div);
@@ -764,62 +407,28 @@
         }
 
         function exporterWord() {
-            let contenuHTML = `
-                <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word'>
-                <head><meta charset='utf-8'><title>Rapport Démantèlement</title></head>
-                <body>
-                <h1>Rapport de Diagnostic & Démantèlement - Module Buse</h1>
-                <p>Date d'édition : ${new Date().toLocaleString("fr-FR")}</p>
-                <h2>1. État des composants contrôlés</h2>
-                <ul>
-            `;
-            for (const cle in baseDeDonnees) {
-                const etat = etatsPieces[cle] ? etatsPieces[cle].texte : "Non contrôlé";
-                contenuHTML += `<li><strong>${baseDeDonnees[cle].nom}</strong> : ${etat} (Masse : ${baseDeDonnees[cle].poids})</li>`;
+            let contenuHTML = `<html><head><meta charset='utf-8'></head><body><h1>Rapport d'expertise</h1><ul>`;
+            for (const code in catalogueRef) {
+                if (etatsPieces[code]) {
+                    const p = catalogueRef[code];
+                    contenuHTML += `<li><strong>[${p.ref}] ${p.nomOfficiel}</strong> : ${etatsPieces[code].texte}</li>`;
+                }
             }
-            contenuHTML += `</ul><h2>2. Journal des observations opérateurs</h2><ul>`;
-            notesLocales.forEach(n => {
-                contenuHTML += `<li><strong>[${n.date}] ${n.nomPiece} (${n.tag}) :</strong> ${n.texte} <em>(${n.auteur})</em></li>`;
-            });
             contenuHTML += `</ul></body></html>`;
-
             const blob = new Blob(['\ufeff', contenuHTML], { type: 'application/msword' });
             const lien = document.createElement('a');
             lien.href = URL.createObjectURL(blob);
-            lien.download = 'Rapport_Demantelement_Buse.doc';
+            lien.download = 'Rapport_Expertise.doc';
             lien.click();
         }
 
-        /* =========================================================================
-           4. COMMUNICATION AVEC 3DEXPERIENCE (CREATIVE EXPERIENCE)
-           ========================================================================= */
         window.addEventListener("message", function (event) {
             if (!event.data) return;
-
-            let messageBrut = typeof event.data === 'string' ? event.data.trim() : "";
-
-            // Cas 1 : 3DEXPERIENCE envoie un objet JSON (ex: '{"id":"buse_laiton","masse":"4.2 g"}')
-            if (messageBrut.startsWith("{")) {
-                try {
-                    const dataJSON = JSON.parse(messageBrut);
-                    if (dataJSON.id) {
-                        chargerPiece(dataJSON.id, dataJSON);
-                        return;
-                    }
-                } catch (e) {
-                    console.warn("Erreur de lecture JSON :", e);
-                }
-            }
-
-            // Cas 2 : 3DEXPERIENCE envoie un simple mot-clé (ex: "buse_laiton" ou "buse")
-            let cleNettoyee = messageBrut.replace(/['"]/g, '');
-            if (cleNettoyee) {
-                chargerPiece(cleNettoyee);
-            }
+            let msg = typeof event.data === 'string' ? event.data.trim().replace(/^['"]|['"]$/g, '') : "";
+            if (msg) recevoirMessage3DX(msg);
         });
 
-        // Chargement initial au démarrage de la page
-        chargerPiece("ensemble_buse");
+        chargerCatalogueCSV();
     </script>
 </body>
 </html>
