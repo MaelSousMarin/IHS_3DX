@@ -2,85 +2,53 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Test Export 3DEXPERIENCE -> HTML</title>
+    <title>Radar de réception 3DEXPERIENCE</title>
     <style>
-        body { font-family: sans-serif; background: #0f172a; color: #f8fafc; padding: 20px; }
-        .boite { background: #1e293b; border: 1px solid #38bdf8; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
-        h2 { color: #38bdf8; margin-top: 0; font-size: 16px; }
-        pre { background: #020617; padding: 10px; border-radius: 5px; color: #4ade80; overflow-x: auto; }
-        button { padding: 8px 12px; cursor: pointer; background: #38bdf8; border: none; border-radius: 4px; font-weight: bold; }
+        body { font-family: monospace; background: #0f172a; color: #f8fafc; padding: 15px; }
+        .radar { background: #1e293b; border: 2px solid #38bdf8; padding: 15px; border-radius: 8px; margin-bottom: 12px; }
+        .statut-attente { color: #facc15; font-size: 16px; font-weight: bold; }
+        .statut-ok { color: #4ade80; font-size: 18px; font-weight: bold; }
+        pre { background: #020617; padding: 10px; border-radius: 6px; color: #38bdf8; white-space: pre-wrap; word-break: break-all; }
     </style>
 </head>
 <body>
 
-    <!-- Bouton pour tester dans ton navigateur sans ouvrir 3DEXPERIENCE -->
-    <div class="boite">
-        <h2>🛠️ 1. Simuler un envoi depuis 3DEXPERIENCE</h2>
-        <button onclick="simulerEnvoi3DX()">Simuler un clic sur la buse (#2315)</button>
-    </div>
-
-    <!-- Boîte qui affiche les informations décodées -->
-    <div class="boite">
-        <h2>📦 2. Données extraites automatiquement</h2>
-        <p><strong>Nom de l'acteur CATIA :</strong> <span id="nomActeur">En attente d'un clic...</span></p>
-        <p><strong>Numéro catalogue détecté :</strong> <span id="numCatalogue">--</span></p>
-    </div>
-
-    <!-- Boîte qui affiche toutes les métadonnées PLM (Masse, Matériau, etc.) -->
-    <div class="boite">
-        <h2>📋 3. Contenu brut exporté par getPLMMetadata()</h2>
-        <pre id="resultatPLM">Aucune donnée PLM reçue pour le moment.</pre>
+    <div class="radar">
+        <div id="etat" class="statut-attente">⏳ EN ATTENTE D'UN MESSAGE DE 3DEXPERIENCE...</div>
+        <p>Dernier message capté :</p>
+        <pre id="journal">Rien reçu pour l'instant.</pre>
     </div>
 
     <script>
-        // ÉTAPE A : Écouter ce que 3DEXPERIENCE envoie via sendMessage()
+        let compteur = 0;
+
+        function afficherReception(source, donnees) {
+            compteur++;
+            const etat = document.getElementById("etat");
+            etat.className = "statut-ok";
+            etat.textContent = "✅ MESSAGE #" + compteur + " REÇU VIA : " + source;
+
+            let texte = typeof donnees === "object" ? JSON.stringify(donnees, null, 2) : String(donnees);
+            document.getElementById("journal").textContent = texte;
+        }
+
+        // Canal 1 : Standard window.postMessage (Creative Experience Web / Desktop)
         window.addEventListener("message", function (event) {
-            if (!event.data) return;
-            traiterDonneesRecues(event.data);
-        });
+            afficherReception("window.message", event.data);
+        }, false);
 
-        // ÉTAPE B : Ouvrir le paquet envoyé et afficher les valeurs à l'écran
-        function traiterDonneesRecues(donneesBrutes) {
-            try {
-                // On transforme le texte JSON reçu en objet JavaScript lisible
-                const paquet = typeof donneesBrutes === "string" ? JSON.parse(donneesBrutes) : donneesBrutes;
+        // Canal 2 : document.message (utilisé par certaines versions du WebViewer)
+        document.addEventListener("message", function (event) {
+            afficherReception("document.message", event.data || event.detail);
+        }, false);
 
-                // 1. Afficher le nom CATIA
-                const nom = paquet.nomActeur || "Inconnu";
-                document.getElementById("nomActeur").textContent = nom;
-
-                // 2. Extraire le numéro à 4 chiffres (ex: 2315 dans "...CS_2315-C A")
-                const match4Chiffres = nom.match(/(?:_|^|\b)(\d{4})(?:-|_|\b)/);
-                document.getElementById("numCatalogue").textContent = match4Chiffres ? "#" + match4Chiffres[1] : "Non trouvé";
-
-                // 3. Afficher toutes les clés/valeurs renvoyées par getPLMMetadata()
-                if (paquet.plm) {
-                    const listeTexte = Object.entries(paquet.plm)
-                        .map(([cle, valeur]) => `${cle} : ${valeur}`)
-                        .join("\n");
-                    document.getElementById("resultatPLM").textContent = listeTexte || "Objet PLM vide {}";
-                }
-            } catch (erreur) {
-                // Si 3DEXPERIENCE envoie juste un mot simple au lieu d'un JSON
-                document.getElementById("nomActeur").textContent = donneesBrutes;
-                document.getElementById("resultatPLM").textContent = "Message texte simple reçu (pas de JSON PLM).";
-            }
-        }
-
-        // Fonction uniquement pour le bouton de test en haut de la page
-        function simulerEnvoi3DX() {
-            const fauxPaquet3DX = JSON.stringify({
-                nomActeur: "mael_Original ultimakerCS_2315-C A (NAUO180)",
-                plm: {
-                    "PLM_ExternalID": "CS_2315-C",
-                    "V_Name": "Olsson Nozzle 0.8",
-                    "V_Mat_Mass": "4.0 g",
-                    "V_Material": "Brass CuZn39Pb3",
-                    "V_version": "A.1"
-                }
-            });
-            traiterDonneesRecues(fauxPaquet3DX);
-        }
+        // Canal 3 : Fonction globale appelée par le mode Legacy de certains WebViewers 3DX
+        window.onMessageReceived = function (msg) {
+            afficherReception("window.onMessageReceived", msg);
+        };
+        window.receiveMessage = function (msg) {
+            afficherReception("window.receiveMessage", msg);
+        };
     </script>
 </body>
 </html>
