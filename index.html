@@ -2,433 +2,85 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IHS Passeport Numérique - Catalogue CSV Minimal</title>
+    <title>Test Export 3DEXPERIENCE -> HTML</title>
     <style>
-        :root {
-            --bg-dark: #0f172a;
-            --bg-card: #1e293b;
-            --bg-hover: #334155;
-            --primary: #38bdf8;
-            --accent: #f59e0b;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --success: #22c55e;
-            --warning: #eab308;
-            --danger: #ef4444;
-            --border: #334155;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
-        body { background-color: var(--bg-dark); color: var(--text-main); padding: 12px; overflow-x: hidden; }
-
-        .sim-bar {
-            background: #020617; border: 1px dashed var(--primary); padding: 8px 12px;
-            border-radius: 8px; margin-bottom: 12px; display: flex; align-items: center;
-            gap: 8px; flex-wrap: wrap; font-size: 12px;
-        }
-        .sim-bar span { color: var(--primary); font-weight: bold; }
-        .sim-select {
-            background: var(--bg-card); color: var(--text-main); border: 1px solid var(--primary);
-            padding: 5px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; flex: 1; min-width: 220px;
-        }
-        .csv-status {
-            font-size: 11px; padding: 3px 8px; border-radius: 4px;
-            background: rgba(34, 197, 94, 0.2); color: #4ade80; font-weight: bold;
-        }
-
-        .header {
-            background: var(--bg-card); padding: 14px 16px; border-radius: 10px;
-            border: 1px solid var(--border); margin-bottom: 14px; display: flex;
-            justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
-        }
-        .ref-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap; }
-        .ref-badge { background: var(--accent); color: #000; font-weight: 800; font-size: 12px; padding: 3px 8px; border-radius: 4px; }
-        .cad-badge { background: #020617; color: var(--text-muted); font-family: monospace; font-size: 11px; padding: 3px 8px; border-radius: 4px; border: 1px solid var(--border); }
-        .piece-title-box h1 { font-size: 19px; color: var(--primary); }
-        .piece-title-box p { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
-
-        .status-badge { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; background: var(--bg-hover); }
-
-        .tabs { display: flex; gap: 8px; margin-bottom: 14px; }
-        .tab-btn {
-            flex: 1; padding: 11px; background: var(--bg-card); color: var(--text-muted);
-            border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px;
-        }
-        .tab-btn.active { background: var(--primary); color: #0f172a; border-color: var(--primary); }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-
-        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(125px, 1fr)); gap: 10px; margin-bottom: 14px; }
-        .metric-card { background: var(--bg-card); padding: 10px; border-radius: 8px; border: 1px solid var(--border); text-align: center; }
-        .metric-card .label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; }
-        .metric-card .value { font-size: 15px; font-weight: bold; margin-top: 4px; color: var(--primary); }
-
-        .criteria-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); gap: 8px; margin-bottom: 14px; }
-        .crit-btn {
-            background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main);
-            padding: 10px; border-radius: 8px; text-align: left; cursor: pointer; display: flex; flex-direction: column; gap: 3px;
-        }
-        .crit-btn:hover, .crit-btn.active { border-color: var(--primary); background: var(--bg-hover); }
-        .crit-btn .crit-num { font-size: 10px; color: var(--primary); font-weight: bold; }
-        .crit-btn .crit-name { font-size: 12px; font-weight: 600; }
-
-        .detail-box { background: var(--bg-card); border: 1px solid var(--primary); border-radius: 10px; padding: 14px; min-height: 100px; }
-        .detail-box h3 { color: var(--primary); font-size: 15px; margin-bottom: 6px; }
-        .detail-box p { font-size: 13.5px; line-height: 1.5; white-space: pre-line; }
-
-        .diag-section { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 12px; }
-        .diag-section h3 { color: var(--primary); margin-bottom: 8px; font-size: 15px; }
-        .alert-box { background: rgba(239, 68, 68, 0.15); border-left: 4px solid var(--danger); padding: 10px 12px; border-radius: 4px; margin-bottom: 12px; font-size: 13px; }
-        .steps-list { padding-left: 20px; line-height: 1.6; font-size: 13.5px; }
-        .state-buttons { display: flex; gap: 8px; margin-top: 10px; }
-        .state-btn { flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: #fff; font-size: 13px; }
-        .btn-ok { background: var(--success); }
-        .btn-warn { background: var(--warning); color: #000; }
-        .btn-err { background: var(--danger); }
-
-        .note-form { background: var(--bg-card); padding: 14px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px; }
-        .note-form input, .note-form select, .note-form textarea { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main); font-size: 13px; }
-        .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
-        .action-btn { background: var(--primary); color: #000; border: none; padding: 9px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; }
-        .action-btn.secondary { background: var(--bg-hover); color: var(--text-main); }
-        .notes-list { display: flex; flex-direction: column; gap: 8px; }
-        .note-item { background: var(--bg-card); border: 1px solid var(--border); padding: 10px; border-radius: 8px; font-size: 13px; }
-        .note-item .note-meta { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
-        .note-item .note-tag { display: inline-block; background: var(--primary); color: #000; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-right: 6px; }
+        body { font-family: sans-serif; background: #0f172a; color: #f8fafc; padding: 20px; }
+        .boite { background: #1e293b; border: 1px solid #38bdf8; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+        h2 { color: #38bdf8; margin-top: 0; font-size: 16px; }
+        pre { background: #020617; padding: 10px; border-radius: 5px; color: #4ade80; overflow-x: auto; }
+        button { padding: 8px 12px; cursor: pointer; background: #38bdf8; border: none; border-radius: 4px; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div class="sim-bar">
-        <span>🛠️ Simuler un clic CATIA :</span>
-        <select class="sim-select" id="selectPieceTest" onchange="recevoirMessage3DX(this.value)">
-            <option value="PRINTHEAD">Chargement du CSV...</option>
-        </select>
-        <span class="csv-status" id="statutCSV">⏳ Lecture CSV...</span>
+    <!-- Bouton pour tester dans ton navigateur sans ouvrir 3DEXPERIENCE -->
+    <div class="boite">
+        <h2>🛠️ 1. Simuler un envoi depuis 3DEXPERIENCE</h2>
+        <button onclick="simulerEnvoi3DX()">Simuler un clic sur la buse (#2315)</button>
     </div>
 
-    <div class="header">
-        <div class="piece-title-box">
-            <div class="ref-row">
-                <span class="ref-badge" id="badgeRef">RÉF. #----</span>
-                <span class="cad-badge" id="badgeCAO">Acteur CATIA : --</span>
-            </div>
-            <h1 id="nomPiece">Chargement...</h1>
-            <p id="sousTitrePiece">Catalogue Officiel Ultimaker 2+</p>
-        </div>
-        <div id="badgeEtat" class="status-badge">État : Non contrôlé</div>
+    <!-- Boîte qui affiche les informations décodées -->
+    <div class="boite">
+        <h2>📦 2. Données extraites automatiquement</h2>
+        <p><strong>Nom de l'acteur CATIA :</strong> <span id="nomActeur">En attente d'un clic...</span></p>
+        <p><strong>Numéro catalogue détecté :</strong> <span id="numCatalogue">--</span></p>
     </div>
 
-    <div class="tabs">
-        <button class="tab-btn active" onclick="changerOnglet('infos', this)">📋 1. Passeport</button>
-        <button class="tab-btn" onclick="changerOnglet('diagnostic', this)">🔧 2. Diagnostic</button>
-        <button class="tab-btn" onclick="changerOnglet('notes', this)">📝 3. Bloc-Notes</button>
-    </div>
-
-    <div id="tab-infos" class="tab-content active">
-        <div class="metrics-grid">
-            <div class="metric-card"><div class="label">N° Réf</div><div class="value" id="valRef">--</div></div>
-            <div class="metric-card"><div class="label">Masse Estimée</div><div class="value" id="valPoids">--</div></div>
-            <div class="metric-card"><div class="label">Matériau</div><div class="value" id="valMateriau">Standard</div></div>
-            <div class="metric-card"><div class="label">Indice</div><div class="value" id="valIndice">8.0 / 10</div></div>
-        </div>
-        <div class="criteria-grid" id="grilleCriteres"></div>
-        <div class="detail-box">
-            <h3 id="titreCritere">Sélectionnez un critère</h3>
-            <p id="texteCritere">--</p>
-        </div>
-    </div>
-
-    <div id="tab-diagnostic" class="tab-content">
-        <div class="alert-box" id="alerteSecurite">⚠️ Vérifier la température et couper l'alimentation avant intervention.</div>
-        <div class="diag-section"><h3>🔩 Outillage requis</h3><p id="outilsRequis">Clé Allen 2.0 mm, Clé à douille 7 mm.</p></div>
-        <div class="diag-section"><h3>📖 Gamme de démontage</h3><ol class="steps-list" id="listeEtapes"></ol></div>
-        <div class="diag-section">
-            <h3>🩺 Déclarer l'état</h3>
-            <div class="state-buttons">
-                <button class="state-btn btn-ok" onclick="definirEtat('Opérationnel', '#22c55e')">✅ Opérationnel</button>
-                <button class="state-btn btn-warn" onclick="definirEtat('Usé', '#eab308')">⚠️ Usé</button>
-                <button class="state-btn btn-err" onclick="definirEtat('À remplacer', '#ef4444')">❌ À remplacer</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="tab-notes" class="tab-content">
-        <div class="note-form">
-            <input type="text" id="noteAuteur" placeholder="Nom de l'opérateur">
-            <select id="noteTag">
-                <option value="Observation">🔍 Observation</option>
-                <option value="Usure">⚠️ Trace d'usure</option>
-                <option value="Commande SAV">🛒 Pièce à commander</option>
-            </select>
-            <textarea id="noteTexte" rows="3" placeholder="Votre observation..."></textarea>
-            <div class="btn-row">
-                <button class="action-btn" onclick="ajouterNote()">💾 Enregistrer</button>
-                <button class="action-btn secondary" onclick="exporterWord()">📄 Exporter (.doc)</button>
-            </div>
-        </div>
-        <div class="notes-list" id="listeNotes"></div>
+    <!-- Boîte qui affiche toutes les métadonnées PLM (Masse, Matériau, etc.) -->
+    <div class="boite">
+        <h2>📋 3. Contenu brut exporté par getPLMMetadata()</h2>
+        <pre id="resultatPLM">Aucune donnée PLM reçue pour le moment.</pre>
     </div>
 
     <script>
-        let catalogueRef = {};
-
-        // Gammes génériques par défaut pour les pièces du catalogue
-        const fichesGeneriques = {
-            etapes: [
-                "Isoler la zone d'intervention et couper l'alimentation électrique si nécessaire.",
-                "Dévisser les éléments de fixation en conservant la visserie dans le bac de tri.",
-                "Extraire délicatement la pièce et inspecter l'état des surfaces de contact."
-            ],
-            criteres: {
-                fonction: "Assurer la liaison mécanique, thermique ou fonctionnelle au sein du sous-ensemble de la machine.",
-                fixation: "Assemblage standardisé par vis métriques ou emboîtement direct.",
-                fabrication: "Usinage ou injection plastique conforme au cahier des charges Ultimaker.",
-                environnement: "Recyclable selon la filière adaptée (métaux / polymères techniques).",
-                dangerosite: "Aucun danger particulier hors manipulation de pièces mécaniques.",
-                inflammabilite: "Faible ou auto-extinguible selon le matériau.",
-                fluides_elec: "Composant passif ou actif selon son intégration dans le module.",
-                mobilite: "Démontable lors de la maintenance préventive ou corrective.",
-                historique: "Référence issue du catalogue officiel des pièces détachées."
-            }
-        };
-
-        const libellesCriteres = [
-            { cle: "fonction", num: "01", titre: "Rôle fonctionnel" },
-            { cle: "materiau", num: "02", titre: "Matériau" },
-            { cle: "fixation", num: "03", titre: "Fixation" },
-            { cle: "fabrication", num: "04", titre: "Fabrication" },
-            { cle: "geometrie", num: "05", titre: "Géométrie & Réf" },
-            { cle: "environnement", num: "06", titre: "Environnement" },
-            { cle: "dangerosite", num: "07", titre: "Sécurité" },
-            { cle: "inflammabilite", num: "08", titre: "Inflammabilité" },
-            { cle: "fluides_elec", num: "09", titre: "Électricité / Fluides" },
-            { cle: "mobilite", num: "10", titre: "Mobilité" },
-            { cle: "historique", num: "11", titre: "Historique & Notes" }
-        ];
-
-        let codePieceActuel = "PRINTHEAD";
-        let nomCAORecu = "PRINTHEAD";
-        let critereActuel = "fonction";
-        let etatsPieces = {};
-        let notesLocales = JSON.parse(localStorage.getItem("notes_buse_ihs")) || [];
-        const FIREBASE_URL = "https://ensamstagem1-default-rtdb.europe-west1.firebasedatabase.app/notes_buse.json";
-
-        async function chargerCatalogueCSV() {
-            const badgeCSV = document.getElementById("statutCSV");
-            try {
-                const reponse = await fetch("catalogue_ultimaker.csv?t=" + new Date().getTime());
-                if (!reponse.ok) throw new Error("CSV introuvable");
-
-                const texte = await reponse.text();
-                const lignes = texte.split(/\r?\n/);
-
-                for (let i = 1; i < lignes.length; i++) {
-                    if (!lignes[i].trim()) continue;
-                    const col = lignes[i].split(";");
-                    if (col.length >= 2) {
-                        const ref = col[0].trim();
-                        const nom = col[1].trim();
-                        catalogueRef[ref] = {
-                            ref: ref === "PRINTHEAD" ? "PRINTHEAD" : "#" + ref,
-                            nomOfficiel: nom
-                        };
-                    }
-                }
-
-                remplirMenuSimulation();
-                badgeCSV.textContent = `✅ ${Object.keys(catalogueRef).length} pièces chargées`;
-                recevoirMessage3DX("PRINTHEAD");
-            } catch (e) {
-                badgeCSV.textContent = "⚠️ Erreur chargement CSV";
-                badgeCSV.style.background = "rgba(239, 68, 68, 0.2)";
-                badgeCSV.style.color = "#f87171";
-            }
-        }
-
-        function remplirMenuSimulation() {
-            const select = document.getElementById("selectPieceTest");
-            select.innerHTML = "";
-            for (const ref in catalogueRef) {
-                const item = catalogueRef[ref];
-                const opt = document.createElement("option");
-                opt.value = ref === "PRINTHEAD" ? "PRINTHEAD" : `mael_Original ultimakerCS_${ref}-A A`;
-                opt.textContent = `[${item.ref}] ${item.nomOfficiel}`;
-                select.appendChild(opt);
-            }
-        }
-
-        function extraireRefDepuisNomCATIA(nomBrut) {
-            if (!nomBrut) return "PRINTHEAD";
-            const texte = nomBrut.trim();
-            const match4 = texte.match(/(?:_|^|\b)(\d{4})(?:-|_|\b)/);
-            if (match4 && catalogueRef[match4[1]]) return match4[1];
-            if (catalogueRef[texte]) return texte;
-            return "PRINTHEAD";
-        }
-
-        function changerOnglet(idOnglet, boutonClique) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-            document.getElementById('tab-' + idOnglet).classList.add('active');
-            boutonClique.classList.add('active');
-        }
-
-        function recevoirMessage3DX(messageBrut) {
-            nomCAORecu = messageBrut;
-            const codeExtrait = extraireRefDepuisNomCATIA(messageBrut);
-            chargerPieceParCode(codeExtrait);
-        }
-
-        function chargerPieceParCode(code) {
-            if (!catalogueRef[code]) code = "PRINTHEAD";
-            if (!catalogueRef[code]) return;
-
-            codePieceActuel = code;
-            const info = catalogueRef[code];
-
-            document.getElementById("badgeRef").textContent = "RÉF. " + info.ref;
-            document.getElementById("badgeCAO").textContent = "Acteur : " + nomCAORecu;
-            document.getElementById("nomPiece").textContent = info.nomOfficiel;
-            document.getElementById("sousTitrePiece").textContent = "Référence extraite du catalogue officiel";
-
-            document.getElementById("valRef").textContent = info.ref;
-            document.getElementById("valPoids").textContent = "Calcul CAO";
-            document.getElementById("valMateriau").textContent = "Standard";
-
-            const badge = document.getElementById("badgeEtat");
-            if (etatsPieces[code]) {
-                badge.textContent = "État : " + etatsPieces[code].texte;
-                badge.style.background = etatsPieces[code].couleur;
-                badge.style.color = "#000";
-            } else {
-                badge.textContent = "État : Non contrôlé";
-                badge.style.background = "#334155";
-                badge.style.color = "#f8fafc";
-            }
-
-            const listeEtapes = document.getElementById("listeEtapes");
-            listeEtapes.innerHTML = "";
-            fichesGeneriques.etapes.forEach(e => {
-                const li = document.createElement("li");
-                li.textContent = e;
-                listeEtapes.appendChild(li);
-            });
-
-            genererGrilleCriteres();
-            afficherDetailCritere(critereActuel);
-            afficherNotes();
-        }
-
-        function genererGrilleCriteres() {
-            const grille = document.getElementById("grilleCriteres");
-            grille.innerHTML = "";
-            libellesCriteres.forEach(item => {
-                const btn = document.createElement("button");
-                btn.className = "crit-btn" + (item.cle === critereActuel ? " active" : "");
-                btn.innerHTML = `<span class="crit-num">CRITère ${item.num}</span><span class="crit-name">${item.titre}</span>`;
-                btn.onclick = () => afficherDetailCritere(item.cle);
-                grille.appendChild(btn);
-            });
-        }
-
-        function afficherDetailCritere(cle) {
-            critereActuel = cle;
-            genererGrilleCriteres();
-            const info = catalogueRef[codePieceActuel];
-            if (!info) return;
-            const infoCritere = libellesCriteres.find(c => c.cle === cle);
-
-            document.getElementById("titreCritere").textContent = `${infoCritere.num}. ${infoCritere.titre} — [${info.ref}]`;
-            
-            let texte = "";
-            if (cle === "geometrie") {
-                texte = `Référence catalogue : ${info.ref}\nNom officiel : ${info.nomOfficiel}\nInstance CATIA détectée : ${nomCAORecu}`;
-            } else {
-                texte = fichesGeneriques.criteres[cle];
-            }
-
-            if (cle === "historique") {
-                const notesDeLaPiece = notesLocales.filter(n => n.code === codePieceActuel);
-                if (notesDeLaPiece.length > 0) {
-                    texte += "\n\n📌 NOTES OPÉRATEURS : " + notesDeLaPiece.map(n => `[${n.tag}] ${n.texte} (${n.auteur})`).join(" | ");
-                }
-            }
-            document.getElementById("texteCritere").textContent = texte;
-        }
-
-        function definirEtat(texteEtat, couleurHex) {
-            etatsPieces[codePieceActuel] = { texte: texteEtat, couleur: couleurHex };
-            chargerPieceParCode(codePieceActuel);
-        }
-
-        function ajouterNote() {
-            const auteur = document.getElementById("noteAuteur").value.trim() || "Opérateur";
-            const tag = document.getElementById("noteTag").value;
-            const texte = document.getElementById("noteTexte").value.trim();
-            if (!texte || !catalogueRef[codePieceActuel]) return;
-
-            const info = catalogueRef[codePieceActuel];
-            const nouvelleNote = {
-                code: codePieceActuel,
-                nomPiece: `${info.ref} - ${info.nomOfficiel}`,
-                auteur: auteur,
-                tag: tag,
-                texte: texte,
-                date: new Date().toLocaleString("fr-FR")
-            };
-
-            notesLocales.unshift(nouvelleNote);
-            localStorage.setItem("notes_buse_ihs", JSON.stringify(notesLocales));
-            fetch(FIREBASE_URL, { method: "POST", body: JSON.stringify(nouvelleNote) }).catch(() => {});
-
-            document.getElementById("noteTexte").value = "";
-            afficherNotes();
-            if (critereActuel === "historique") afficherDetailCritere("historique");
-        }
-
-        function afficherNotes() {
-            const conteneur = document.getElementById("listeNotes");
-            conteneur.innerHTML = "";
-            if (notesLocales.length === 0) {
-                conteneur.innerHTML = "<p style='color:#94a3b8; font-size:12px;'>Aucune note.</p>";
-                return;
-            }
-            notesLocales.forEach(n => {
-                const div = document.createElement("div");
-                div.className = "note-item";
-                div.innerHTML = `
-                    <div class="note-meta">${n.date} — <strong>${n.auteur}</strong> sur <strong>${n.nomPiece}</strong></div>
-                    <div><span class="note-tag">${n.tag}</span>${n.texte}</div>
-                `;
-                conteneur.appendChild(div);
-            });
-        }
-
-        function exporterWord() {
-            let contenuHTML = `<html><head><meta charset='utf-8'></head><body><h1>Rapport d'expertise</h1><ul>`;
-            for (const code in catalogueRef) {
-                if (etatsPieces[code]) {
-                    const p = catalogueRef[code];
-                    contenuHTML += `<li><strong>[${p.ref}] ${p.nomOfficiel}</strong> : ${etatsPieces[code].texte}</li>`;
-                }
-            }
-            contenuHTML += `</ul></body></html>`;
-            const blob = new Blob(['\ufeff', contenuHTML], { type: 'application/msword' });
-            const lien = document.createElement('a');
-            lien.href = URL.createObjectURL(blob);
-            lien.download = 'Rapport_Expertise.doc';
-            lien.click();
-        }
-
+        // ÉTAPE A : Écouter ce que 3DEXPERIENCE envoie via sendMessage()
         window.addEventListener("message", function (event) {
             if (!event.data) return;
-            let msg = typeof event.data === 'string' ? event.data.trim().replace(/^['"]|['"]$/g, '') : "";
-            if (msg) recevoirMessage3DX(msg);
+            traiterDonneesRecues(event.data);
         });
 
-        chargerCatalogueCSV();
+        // ÉTAPE B : Ouvrir le paquet envoyé et afficher les valeurs à l'écran
+        function traiterDonneesRecues(donneesBrutes) {
+            try {
+                // On transforme le texte JSON reçu en objet JavaScript lisible
+                const paquet = typeof donneesBrutes === "string" ? JSON.parse(donneesBrutes) : donneesBrutes;
+
+                // 1. Afficher le nom CATIA
+                const nom = paquet.nomActeur || "Inconnu";
+                document.getElementById("nomActeur").textContent = nom;
+
+                // 2. Extraire le numéro à 4 chiffres (ex: 2315 dans "...CS_2315-C A")
+                const match4Chiffres = nom.match(/(?:_|^|\b)(\d{4})(?:-|_|\b)/);
+                document.getElementById("numCatalogue").textContent = match4Chiffres ? "#" + match4Chiffres[1] : "Non trouvé";
+
+                // 3. Afficher toutes les clés/valeurs renvoyées par getPLMMetadata()
+                if (paquet.plm) {
+                    const listeTexte = Object.entries(paquet.plm)
+                        .map(([cle, valeur]) => `${cle} : ${valeur}`)
+                        .join("\n");
+                    document.getElementById("resultatPLM").textContent = listeTexte || "Objet PLM vide {}";
+                }
+            } catch (erreur) {
+                // Si 3DEXPERIENCE envoie juste un mot simple au lieu d'un JSON
+                document.getElementById("nomActeur").textContent = donneesBrutes;
+                document.getElementById("resultatPLM").textContent = "Message texte simple reçu (pas de JSON PLM).";
+            }
+        }
+
+        // Fonction uniquement pour le bouton de test en haut de la page
+        function simulerEnvoi3DX() {
+            const fauxPaquet3DX = JSON.stringify({
+                nomActeur: "mael_Original ultimakerCS_2315-C A (NAUO180)",
+                plm: {
+                    "PLM_ExternalID": "CS_2315-C",
+                    "V_Name": "Olsson Nozzle 0.8",
+                    "V_Mat_Mass": "4.0 g",
+                    "V_Material": "Brass CuZn39Pb3",
+                    "V_version": "A.1"
+                }
+            });
+            traiterDonneesRecues(fauxPaquet3DX);
+        }
     </script>
 </body>
 </html>
