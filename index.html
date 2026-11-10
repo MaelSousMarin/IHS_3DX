@@ -6,57 +6,58 @@
     <title>IHS Passeport Numérique - 3DEXPERIENCE</title>
     <style>
         :root {
-            /* Charte Graphique Officielle Dassault Systèmes (3DS) */
-            --ds-blue-dark: #002C4B;     /* Bleu Nuit 3DS */
-            --ds-blue-primary: #005386;  /* Bleu Corporate 3DS */
-            --ds-blue-light: #0076BA;    /* Bleu Action / Survol */
-            --ds-blue-tint: #EBF4FA;     /* Fond de sélection clair */
-            --ds-cyan: #00A3E0;          /* Accent technologique 3DS */
+            /* Charte Graphique Dassault Systèmes (3DS) - Thème Clair Uni */
+            --ds-blue-dark: #002C4B;
+            --ds-blue-primary: #005386;
+            --ds-blue-light: #0076BA;
             
-            /* Neutres & Fonds Thème Clair */
-            --bg-main: #F4F6F8;
+            /* Neutres & Fonds */
+            --bg-main: #F5F5F7;
             --bg-card: #FFFFFF;
-            --bg-pill-bar: #E6E9EF;      /* Fond gris doux de la barre capsule */
-            --bg-hover: #E8EEF3;
+            --bg-pill-bar: #E5E8ED;
+            --bg-input: #F0F2F5;
             --text-main: #1D1D1F;
-            --text-muted: #626C75;
-            --border: #D1D9E0;
+            --text-muted: #6E6E73;
 
             /* Couleurs fonctionnelles */
             --success: #28894B;
             --warning: #E67E22;
             --danger: #D12F2F;
+
+            /* Ombres douces (sans aucune bordure) */
+            --shadow-soft: 0 4px 16px rgba(0, 0, 0, 0.04);
+            --shadow-hover: 0 12px 28px rgba(0, 44, 75, 0.12);
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: '3ds', 'Segoe UI', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+            font-family: '3ds', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
         }
 
         body {
             background-color: var(--bg-main);
             color: var(--text-main);
-            padding: 14px;
+            padding: 16px;
             overflow-x: hidden;
         }
 
         /* =========================================================
-           1. EN-TÊTE FIDÈLE AU CROQUIS (Réf + Acteur / Nom pièce)
+           1. EN-TÊTE ÉPURÉ UNI (SANS BORDURE)
            ========================================================= */
         .header {
             background: var(--bg-card);
-            padding: 14px 18px;
-            border-radius: 10px;
-            border: 1px solid var(--border);
-            margin-bottom: 14px;
+            padding: 18px 22px;
+            border-radius: 18px;
+            border: none;
+            margin-bottom: 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
             gap: 12px;
-            box-shadow: 0 2px 6px rgba(0, 44, 75, 0.04);
+            box-shadow: var(--shadow-soft);
         }
 
         .piece-title-box {
@@ -87,312 +88,406 @@
 
         .cad-value {
             font-family: Consolas, monospace;
-            background: var(--bg-main);
-            padding: 2px 8px;
-            border-radius: 4px;
-            border: 1px solid var(--border);
+            background: var(--bg-input);
+            padding: 3px 10px;
+            border-radius: 8px;
+            border: none;
             font-size: 12px;
             color: var(--text-main);
         }
 
         .csv-dot {
-            font-size: 11px;
+            font-size: 12px;
             color: var(--text-muted);
         }
 
         .piece-title-box h1 {
-            font-size: 20px;
-            color: var(--ds-blue-dark);
+            font-size: 22px;
+            color: var(--text-main);
             font-weight: 700;
-            letter-spacing: -0.2px;
+            letter-spacing: -0.3px;
         }
 
         .status-badge {
-            padding: 6px 14px;
+            padding: 8px 16px;
             border-radius: 999px;
-            font-size: 12px;
+            font-size: 12.5px;
             font-weight: 700;
-            background: var(--bg-main);
+            background: var(--bg-input);
             color: var(--text-main);
-            border: 1px solid var(--border);
+            border: none;
         }
 
         /* =========================================================
-           2. BARRE D'ONGLETS EN PILULE (STYLE CAPSULE)
+           2. BARRE D'ONGLETS EN PILULE (STYLE CAPSULE SANS BORDURE)
            ========================================================= */
         .tabs-pill-container {
             background: var(--bg-pill-bar);
             padding: 5px;
             border-radius: 999px;
+            border: none;
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 6px;
-            margin-bottom: 18px;
+            margin-bottom: 20px;
         }
 
         .tab-btn {
             flex: 1;
-            padding: 10px 18px;
+            padding: 11px 20px;
             background: transparent;
             color: var(--text-main);
             border: none;
+            outline: none;
             border-radius: 999px;
             cursor: pointer;
             font-weight: 600;
             font-size: 14px;
             text-align: center;
-            transition: all 0.2s ease;
+            transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
         }
 
         .tab-btn:hover:not(.active) {
-            color: var(--ds-blue-primary);
-            background: rgba(255, 255, 255, 0.45);
+            background: rgba(255, 255, 255, 0.6);
+            transform: scale(1.02);
         }
 
         .tab-btn.active {
             background: var(--ds-blue-primary);
             color: #FFFFFF;
-            box-shadow: 0 2px 6px rgba(0, 83, 134, 0.25);
+            box-shadow: 0 2px 8px rgba(0, 83, 134, 0.25);
         }
 
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
         /* =========================================================
-           3. CONTENU DES ONGLETS (CHARTE 3DS CLAIRE)
+           3. INDICATEURS CLÉS UNIS (SANS BORDURE)
            ========================================================= */
         .metrics-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(125px, 1fr));
-            gap: 10px;
-            margin-bottom: 14px;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 12px;
+            margin-bottom: 18px;
         }
+
         .metric-card {
             background: var(--bg-card);
-            padding: 11px;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            border-top: 3px solid var(--ds-cyan);
+            padding: 16px 12px;
+            border-radius: 16px;
+            border: none;
             text-align: center;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+            box-shadow: var(--shadow-soft);
         }
+
         .metric-card .label {
-            font-size: 10px;
+            font-size: 11px;
             color: var(--text-muted);
             text-transform: uppercase;
-            font-weight: 700;
+            font-weight: 600;
             letter-spacing: 0.4px;
         }
+
         .metric-card .value {
-            font-size: 15px;
+            font-size: 16px;
             font-weight: 700;
-            margin-top: 4px;
+            margin-top: 6px;
             color: var(--ds-blue-primary);
         }
 
-        /* Grille des 11 critères */
+        /* =========================================================
+           4. BOUTONS CRITÈRES STYLE CARTES (AGRANDISSEMENT + COULEUR UNIE AU CLIC)
+           ========================================================= */
         .criteria-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
-            gap: 8px;
-            margin-bottom: 14px;
+            grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
+            gap: 14px;
+            margin-bottom: 18px;
         }
+
         .crit-btn {
             background: var(--bg-card);
-            border: 1px solid var(--border);
+            border: none;
+            outline: none;
             color: var(--text-main);
-            padding: 10px 12px;
-            border-radius: 8px;
+            padding: 18px 16px 46px 16px;
+            border-radius: 18px;
             text-align: left;
             cursor: pointer;
             display: flex;
             flex-direction: column;
-            gap: 3px;
-            transition: all 0.15s ease;
-        }
-        .crit-btn:hover {
-            border-color: var(--ds-blue-light);
-            background: var(--bg-hover);
-        }
-        .crit-btn.active {
-            border-color: var(--ds-blue-primary);
-            background: var(--ds-blue-tint);
-            box-shadow: inset 3px 0 0 var(--ds-blue-primary);
-        }
-        .crit-btn .crit-num {
-            font-size: 10px;
-            color: var(--ds-blue-light);
-            font-weight: 800;
-            text-transform: uppercase;
-        }
-        .crit-btn .crit-name {
-            font-size: 12.5px;
-            font-weight: 600;
-            color: var(--ds-blue-dark);
+            gap: 6px;
+            position: relative;
+            box-shadow: var(--shadow-soft);
+            transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1),
+                        background-color 0.25s ease,
+                        box-shadow 0.25s ease,
+                        color 0.25s ease;
         }
 
-        /* Zone de détail du critère */
+        /* Agrandissement au survol de la souris */
+        .crit-btn:hover {
+            transform: scale(1.04);
+            box-shadow: var(--shadow-hover);
+            z-index: 2;
+        }
+
+        /* Changement de couleur uni quand cliqué / actif */
+        .crit-btn.active {
+            background: var(--ds-blue-primary);
+            color: #FFFFFF;
+            box-shadow: 0 8px 20px rgba(0, 83, 134, 0.28);
+        }
+
+        .crit-btn .crit-num {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 600;
+            transition: color 0.2s ease;
+        }
+
+        .crit-btn .crit-name {
+            font-size: 15px;
+            font-weight: 700;
+            line-height: 1.25;
+            color: var(--text-main);
+            transition: color 0.2s ease;
+        }
+
+        .crit-btn.active .crit-num {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .crit-btn.active .crit-name {
+            color: #FFFFFF;
+        }
+
+        /* Petit cercle "+" en bas à droite comme sur le modèle */
+        .crit-btn .crit-plus {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--bg-input);
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            font-weight: 600;
+            line-height: 1;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .crit-btn.active .crit-plus {
+            background: rgba(255, 255, 255, 0.22);
+            color: #FFFFFF;
+        }
+
+        /* =========================================================
+           5. ZONE DE DÉTAIL DU CRITÈRE (UNIE SANS BORDURE)
+           ========================================================= */
         .detail-box {
             background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-top: 3px solid var(--ds-blue-primary);
-            border-radius: 8px;
-            padding: 14px 16px;
-            min-height: 100px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+            border: none;
+            border-radius: 18px;
+            padding: 20px 22px;
+            min-height: 110px;
+            box-shadow: var(--shadow-soft);
         }
+
         .detail-box h3 {
             color: var(--ds-blue-primary);
-            font-size: 14.5px;
-            margin-bottom: 6px;
+            font-size: 16px;
+            margin-bottom: 8px;
             font-weight: 700;
         }
+
         .detail-box p {
-            font-size: 13.5px;
-            line-height: 1.5;
+            font-size: 14px;
+            line-height: 1.6;
             white-space: pre-line;
             color: var(--text-main);
         }
 
-        /* Onglet Diagnostic */
+        /* =========================================================
+           6. ONGLET DIAGNOSTIC & ONGLET BLOC-NOTE (UNIS SANS BORDURE)
+           ========================================================= */
         .diag-section {
             background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 14px 16px;
-            margin-bottom: 12px;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+            border: none;
+            border-radius: 18px;
+            padding: 18px 20px;
+            margin-bottom: 14px;
+            box-shadow: var(--shadow-soft);
         }
+
         .diag-section h3 {
             color: var(--ds-blue-primary);
-            margin-bottom: 8px;
-            font-size: 14.5px;
+            margin-bottom: 10px;
+            font-size: 15px;
+            font-weight: 700;
         }
+
         .alert-box {
-            background: #FDF2F2;
-            border: 1px solid #F5C6CB;
-            border-left: 4px solid var(--danger);
-            color: #842029;
-            padding: 10px 12px;
-            border-radius: 6px;
-            margin-bottom: 12px;
-            font-size: 13px;
+            background: #FEE2E2;
+            border: none;
+            color: #991B1B;
+            padding: 14px 18px;
+            border-radius: 14px;
+            margin-bottom: 14px;
+            font-size: 13.5px;
             font-weight: 600;
         }
+
         .steps-list {
             padding-left: 20px;
-            line-height: 1.6;
-            font-size: 13.5px;
+            line-height: 1.7;
+            font-size: 14px;
         }
+
         .state-buttons {
             display: flex;
-            gap: 8px;
-            margin-top: 10px;
+            gap: 10px;
+            margin-top: 12px;
         }
+
         .state-btn {
             flex: 1;
-            padding: 10px;
+            padding: 12px 16px;
             border: none;
+            outline: none;
             border-radius: 999px;
             font-weight: 700;
             cursor: pointer;
             color: #FFFFFF;
-            font-size: 12.5px;
-            transition: opacity 0.15s;
+            font-size: 13px;
+            transition: transform 0.2s ease, opacity 0.2s ease;
         }
-        .state-btn:hover { opacity: 0.9; }
+
+        .state-btn:hover {
+            transform: scale(1.03);
+            opacity: 0.92;
+        }
+
         .btn-ok { background: var(--success); }
-        .btn-warn { background: var(--warning); color: #FFFFFF; }
+        .btn-warn { background: var(--warning); }
         .btn-err { background: var(--danger); }
 
-        /* Onglet Bloc-note */
+        /* Bloc-note */
         .note-form {
             background: var(--bg-card);
-            padding: 14px 16px;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            margin-bottom: 12px;
+            padding: 18px 20px;
+            border-radius: 18px;
+            border: none;
+            margin-bottom: 14px;
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+            gap: 10px;
+            box-shadow: var(--shadow-soft);
         }
+
         .note-form input, .note-form select, .note-form textarea {
             width: 100%;
-            padding: 9px 12px;
-            border-radius: 6px;
-            border: 1px solid var(--border);
-            background: var(--bg-main);
+            padding: 11px 14px;
+            border-radius: 12px;
+            border: none;
+            background: var(--bg-input);
             color: var(--text-main);
-            font-size: 13px;
-        }
-        .note-form input:focus, .note-form select:focus, .note-form textarea:focus {
+            font-size: 13.5px;
             outline: none;
-            border-color: var(--ds-blue-primary);
-            background: #FFFFFF;
         }
-        .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+        .note-form input:focus, .note-form select:focus, .note-form textarea:focus {
+            background: #E8ECF2;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
         .action-btn {
             background: var(--ds-blue-primary);
             color: #FFFFFF;
             border: none;
-            padding: 9px 18px;
+            outline: none;
+            padding: 11px 20px;
             border-radius: 999px;
             font-weight: 700;
             cursor: pointer;
-            font-size: 12.5px;
-            transition: background 0.15s;
+            font-size: 13px;
+            transition: transform 0.2s ease, background-color 0.2s ease;
         }
-        .action-btn:hover { background: var(--ds-blue-light); }
+
+        .action-btn:hover {
+            background: var(--ds-blue-light);
+            transform: scale(1.03);
+        }
+
         .action-btn.secondary {
             background: var(--bg-pill-bar);
-            color: var(--ds-blue-dark);
+            color: var(--text-main);
         }
-        .action-btn.secondary:hover { background: var(--border); }
-        .notes-list { display: flex; flex-direction: column; gap: 8px; }
+
+        .action-btn.secondary:hover {
+            background: #D5DAE2;
+        }
+
+        .notes-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
         .note-item {
             background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-left: 3px solid var(--ds-blue-primary);
-            padding: 10px 12px;
-            border-radius: 6px;
-            font-size: 13px;
+            border: none;
+            padding: 14px 18px;
+            border-radius: 14px;
+            font-size: 13.5px;
+            box-shadow: var(--shadow-soft);
         }
+
         .note-item .note-meta {
-            font-size: 11px;
+            font-size: 11.5px;
             color: var(--text-muted);
-            margin-bottom: 4px;
+            margin-bottom: 6px;
         }
+
         .note-item .note-tag {
             display: inline-block;
-            background: var(--ds-blue-tint);
-            color: var(--ds-blue-primary);
-            border: 1px solid #B8D9EE;
-            padding: 2px 8px;
+            background: var(--ds-blue-primary);
+            color: #FFFFFF;
+            border: none;
+            padding: 3px 10px;
             border-radius: 999px;
             font-size: 11px;
             font-weight: 700;
-            margin-right: 6px;
+            margin-right: 8px;
         }
     </style>
 </head>
 <body>
 
-    <!-- EN-TÊTE FIDÈLE AU SCHÉMA : Ligne Réf + Acteur au-dessus, Nom de la pièce en dessous -->
+    <!-- EN-TÊTE -->
     <div class="header">
         <div class="piece-title-box">
             <div class="ref-row">
                 <span class="ref-item">Réf : <strong id="badgeRef">#----</strong></span>
                 <span class="ref-item">Acteur : <span class="cad-value" id="badgeCAO">--</span></span>
-                <span class="csv-dot" id="statutCSV">⏳ CSV...</span>
+                <span class="csv-dot" id="statutCSV">Chargement CSV...</span>
             </div>
             <h1 id="nomPiece">Chargement de la pièce...</h1>
         </div>
         <div id="badgeEtat" class="status-badge">État : Non contrôlé</div>
     </div>
 
-    <!-- BARRE D'ONGLETS EN PILULE (STYLE CAPSULE) -->
+    <!-- BARRE D'ONGLETS EN PILULE -->
     <div class="tabs-pill-container">
         <button class="tab-btn active" onclick="changerOnglet('infos', this)">Passeport</button>
         <button class="tab-btn" onclick="changerOnglet('diagnostic', this)">Diagnostic</button>
@@ -416,15 +511,15 @@
 
     <!-- ONGLET 2 : DIAGNOSTIC -->
     <div id="tab-diagnostic" class="tab-content">
-        <div class="alert-box" id="alerteSecurite">⚠️ Vérifier la température et couper l'alimentation avant intervention.</div>
-        <div class="diag-section"><h3>🔩 Outillage requis</h3><p id="outilsRequis">Clé Allen 2.0 mm, Clé à douille 7 mm.</p></div>
-        <div class="diag-section"><h3>📖 Gamme de démontage</h3><ol class="steps-list" id="listeEtapes"></ol></div>
+        <div class="alert-box" id="alerteSecurite">Consigne de sécurité : Vérifier la température et couper l'alimentation avant intervention.</div>
+        <div class="diag-section"><h3>Outillage requis</h3><p id="outilsRequis">Clé Allen 2.0 mm, Clé à douille 7 mm.</p></div>
+        <div class="diag-section"><h3>Gamme de démontage</h3><ol class="steps-list" id="listeEtapes"></ol></div>
         <div class="diag-section">
-            <h3>🩺 Déclarer l'état</h3>
+            <h3>Déclarer l'état</h3>
             <div class="state-buttons">
-                <button class="state-btn btn-ok" onclick="definirEtat('Opérationnel', '#28894B')">✅ Opérationnel</button>
-                <button class="state-btn btn-warn" onclick="definirEtat('Usé', '#E67E22')">⚠️ Usé</button>
-                <button class="state-btn btn-err" onclick="definirEtat('À remplacer', '#D12F2F')">❌ À remplacer</button>
+                <button class="state-btn btn-ok" onclick="definirEtat('Opérationnel', '#28894B')">Opérationnel</button>
+                <button class="state-btn btn-warn" onclick="definirEtat('Usé', '#E67E22')">Usé</button>
+                <button class="state-btn btn-err" onclick="definirEtat('À remplacer', '#D12F2F')">À remplacer</button>
             </div>
         </div>
     </div>
@@ -434,9 +529,9 @@
         <div class="note-form">
             <input type="text" id="noteAuteur" placeholder="Nom de l'opérateur">
             <select id="noteTag">
-                <option value="Observation">🔍 Observation</option>
-                <option value="Usure">⚠️ Trace d'usure</option>
-                <option value="Commande SAV">🛒 Pièce à commander</option>
+                <option value="Observation">Observation</option>
+                <option value="Usure">Trace d'usure</option>
+                <option value="Commande SAV">Pièce à commander</option>
             </select>
             <textarea id="noteTexte" rows="3" placeholder="Votre observation..."></textarea>
             <div class="btn-row">
@@ -450,7 +545,6 @@
     <script>
         let catalogueRef = {};
 
-        // Gammes génériques par défaut pour les pièces du catalogue
         const fichesGeneriques = {
             etapes: [
                 "Isoler la zone d'intervention et couper l'alimentation électrique si nécessaire.",
@@ -514,10 +608,10 @@
                     }
                 }
 
-                badgeCSV.textContent = `• ${Object.keys(catalogueRef).length} réf.`;
+                badgeCSV.textContent = `${Object.keys(catalogueRef).length} références chargées`;
                 recevoirMessage3DX("PRINTHEAD");
             } catch (e) {
-                badgeCSV.textContent = "⚠️ CSV non trouvé";
+                badgeCSV.textContent = "CSV non trouvé";
                 badgeCSV.style.color = "#D12F2F";
             }
         }
@@ -564,12 +658,10 @@
                 badge.textContent = "État : " + etatsPieces[code].texte;
                 badge.style.background = etatsPieces[code].couleur;
                 badge.style.color = "#FFFFFF";
-                badge.style.borderColor = "transparent";
             } else {
                 badge.textContent = "État : Non contrôlé";
-                badge.style.background = "#F4F6F8";
+                badge.style.background = "#F0F2F5";
                 badge.style.color = "#1D1D1F";
-                badge.style.borderColor = "#D1D9E0";
             }
 
             const listeEtapes = document.getElementById("listeEtapes");
@@ -591,7 +683,11 @@
             libellesCriteres.forEach(item => {
                 const btn = document.createElement("button");
                 btn.className = "crit-btn" + (item.cle === critereActuel ? " active" : "");
-                btn.innerHTML = `<span class="crit-num">CRITÈRE ${item.num}</span><span class="crit-name">${item.titre}</span>`;
+                btn.innerHTML = `
+                    <span class="crit-num">Critère ${item.num}</span>
+                    <span class="crit-name">${item.titre}</span>
+                    <span class="crit-plus">+</span>
+                `;
                 btn.onclick = () => afficherDetailCritere(item.cle);
                 grille.appendChild(btn);
             });
@@ -616,7 +712,7 @@
             if (cle === "historique") {
                 const notesDeLaPiece = notesLocales.filter(n => n.code === codePieceActuel);
                 if (notesDeLaPiece.length > 0) {
-                    texte += "\n\n📌 NOTES OPÉRATEURS : " + notesDeLaPiece.map(n => `[${n.tag}] ${n.texte} (${n.auteur})`).join(" | ");
+                    texte += "\n\nNOTES OPÉRATEURS : " + notesDeLaPiece.map(n => `[${n.tag}] ${n.texte} (${n.auteur})`).join(" | ");
                 }
             }
             document.getElementById("texteCritere").textContent = texte;
@@ -656,7 +752,7 @@
             const conteneur = document.getElementById("listeNotes");
             conteneur.innerHTML = "";
             if (notesLocales.length === 0) {
-                conteneur.innerHTML = "<p style='color:#626C75; font-size:12px;'>Aucune note.</p>";
+                conteneur.innerHTML = "<p style='color:#6E6E73; font-size:12.5px;'>Aucune note enregistrée.</p>";
                 return;
             }
             notesLocales.forEach(n => {
