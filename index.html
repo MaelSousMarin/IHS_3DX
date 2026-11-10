@@ -25,8 +25,8 @@
             --danger: #D12F2F;
 
             /* Ombres douces (sans aucune bordure) */
-            --shadow-soft: 0 4px 16px rgba(0, 0, 0, 0.04);
-            --shadow-hover: 0 12px 28px rgba(0, 44, 75, 0.12);
+            --shadow-soft: 0 4px 14px rgba(0, 0, 0, 0.04);
+            --shadow-hover: 0 10px 22px rgba(0, 44, 75, 0.12);
         }
 
         * {
@@ -174,15 +174,15 @@
 
         .metric-card {
             background: var(--bg-card);
-            padding: 16px 12px;
-            border-radius: 16px;
+            padding: 14px 12px;
+            border-radius: 14px;
             border: none;
             text-align: center;
             box-shadow: var(--shadow-soft);
         }
 
         .metric-card .label {
-            font-size: 11px;
+            font-size: 10.5px;
             color: var(--text-muted);
             text-transform: uppercase;
             font-weight: 600;
@@ -190,68 +190,65 @@
         }
 
         .metric-card .value {
-            font-size: 16px;
+            font-size: 15.5px;
             font-weight: 700;
-            margin-top: 6px;
+            margin-top: 5px;
             color: var(--ds-blue-primary);
         }
 
         /* =========================================================
-           4. BOUTONS CRITÈRES STYLE CARTES (AGRANDISSEMENT + COULEUR UNIE AU CLIC)
+           4. BOUTONS CRITÈRES COMPACTS (x0.75, SANS "+", TEXTE DS-BLUE-PRIMARY)
            ========================================================= */
         .criteria-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
-            gap: 14px;
-            margin-bottom: 18px;
+            grid-template-columns: repeat(auto-fill, minmax(125px, 1fr));
+            gap: 10px;
+            margin-bottom: 16px;
         }
 
         .crit-btn {
             background: var(--bg-card);
             border: none;
             outline: none;
-            color: var(--text-main);
-            padding: 18px 16px 46px 16px;
-            border-radius: 18px;
+            padding: 12px 13px;
+            border-radius: 14px;
             text-align: left;
             cursor: pointer;
             display: flex;
             flex-direction: column;
-            gap: 6px;
-            position: relative;
+            gap: 4px;
             box-shadow: var(--shadow-soft);
-            transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1),
-                        background-color 0.25s ease,
-                        box-shadow 0.25s ease,
-                        color 0.25s ease;
+            transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
+                        background-color 0.22s ease,
+                        box-shadow 0.22s ease,
+                        color 0.22s ease;
         }
 
-        /* Agrandissement au survol de la souris */
+        /* Agrandissement au survol */
         .crit-btn:hover {
-            transform: scale(1.04);
+            transform: scale(1.045);
             box-shadow: var(--shadow-hover);
             z-index: 2;
         }
 
-        /* Changement de couleur uni quand cliqué / actif */
+        /* Changement de couleur uni quand cliqué */
         .crit-btn.active {
             background: var(--ds-blue-primary);
-            color: #FFFFFF;
-            box-shadow: 0 8px 20px rgba(0, 83, 134, 0.28);
+            box-shadow: 0 6px 16px rgba(0, 83, 134, 0.28);
         }
 
         .crit-btn .crit-num {
-            font-size: 11px;
+            font-size: 10px;
             color: var(--text-muted);
             font-weight: 600;
             transition: color 0.2s ease;
         }
 
         .crit-btn .crit-name {
-            font-size: 15px;
+            font-size: 12.5px;
             font-weight: 700;
             line-height: 1.25;
-            color: var(--text-main);
+            color: var(--ds-blue-primary);
             transition: color 0.2s ease;
         }
 
@@ -260,30 +257,6 @@
         }
 
         .crit-btn.active .crit-name {
-            color: #FFFFFF;
-        }
-
-        /* Petit cercle "+" en bas à droite comme sur le modèle */
-        .crit-btn .crit-plus {
-            position: absolute;
-            bottom: 12px;
-            right: 12px;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            background: var(--bg-input);
-            color: var(--text-muted);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 15px;
-            font-weight: 600;
-            line-height: 1;
-            transition: background-color 0.2s ease, color 0.2s ease;
-        }
-
-        .crit-btn.active .crit-plus {
-            background: rgba(255, 255, 255, 0.22);
             color: #FFFFFF;
         }
 
@@ -686,7 +659,6 @@
                 btn.innerHTML = `
                     <span class="crit-num">Critère ${item.num}</span>
                     <span class="crit-name">${item.titre}</span>
-                    <span class="crit-plus">+</span>
                 `;
                 btn.onclick = () => afficherDetailCritere(item.cle);
                 grille.appendChild(btn);
