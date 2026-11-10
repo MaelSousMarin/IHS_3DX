@@ -224,12 +224,14 @@
                         color 0.22s ease;
         }
 
+        /* Agrandissement au survol */
         .crit-btn:hover {
             transform: scale(1.045);
             box-shadow: var(--shadow-hover);
             z-index: 2;
         }
 
+        /* Changement de couleur uni quand cliqué */
         .crit-btn.active {
             background: var(--ds-blue-primary);
             box-shadow: 0 6px 16px rgba(0, 83, 134, 0.28);
@@ -449,11 +451,11 @@
     <div class="header">
         <div class="piece-title-box">
             <div class="ref-row">
-                <span class="ref-item">Réf : <strong id="badgeRef">#PRINTHEAD</strong></span>
-                <span class="ref-item">Acteur : <span class="cad-value" id="badgeCAO">PRINTHEAD</span></span>
+                <span class="ref-item">Réf : <strong id="badgeRef">#----</strong></span>
+                <span class="ref-item">Acteur : <span class="cad-value" id="badgeCAO">--</span></span>
                 <span class="csv-dot" id="statutCSV">Chargement CSV...</span>
             </div>
-            <h1 id="nomPiece">Print Head Assembly (Ultimaker 2+)</h1>
+            <h1 id="nomPiece">Chargement de la pièce...</h1>
         </div>
         <div id="badgeEtat" class="status-badge">État : Non contrôlé</div>
     </div>
@@ -468,8 +470,8 @@
     <!-- ONGLET 1 : PASSEPORT -->
     <div id="tab-infos" class="tab-content active">
         <div class="metrics-grid">
-            <div class="metric-card"><div class="label">N° Réf</div><div class="value" id="valRef">#PRINTHEAD</div></div>
-            <div class="metric-card"><div class="label">Masse Estimée</div><div class="value" id="valPoids">Calcul CAO</div></div>
+            <div class="metric-card"><div class="label">N° Réf</div><div class="value" id="valRef">--</div></div>
+            <div class="metric-card"><div class="label">Masse Estimée</div><div class="value" id="valPoids">--</div></div>
             <div class="metric-card"><div class="label">Matériau</div><div class="value" id="valMateriau">Standard</div></div>
             <div class="metric-card"><div class="label">Indice</div><div class="value" id="valIndice">8.0 / 10</div></div>
         </div>
@@ -484,4 +486,281 @@
     <div id="tab-diagnostic" class="tab-content">
         <div class="alert-box" id="alerteSecurite">Consigne de sécurité : Vérifier la température et couper l'alimentation avant intervention.</div>
         <div class="diag-section"><h3>Outillage requis</h3><p id="outilsRequis">Clé Allen 2.0 mm, Clé à douille 7 mm.</p></div>
-        <div
+        <div class="diag-section"><h3>Gamme de démontage</h3><ol class="steps-list" id="listeEtapes"></ol></div>
+        <div class="diag-section">
+            <h3>Déclarer l'état</h3>
+            <div class="state-buttons">
+                <button class="state-btn btn-ok" onclick="definirEtat('Opérationnel', '#28894B')">Opérationnel</button>
+                <button class="state-btn btn-warn" onclick="definirEtat('Usé', '#E67E22')">Usé</button>
+                <button class="state-btn btn-err" onclick="definirEtat('À remplacer', '#D12F2F')">À remplacer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ONGLET 3 : BLOC-NOTE -->
+    <div id="tab-notes" class="tab-content">
+        <div class="note-form">
+            <input type="text" id="noteAuteur" placeholder="Nom de l'opérateur">
+            <select id="noteTag">
+                <option value="Observation">Observation</option>
+                <option value="Usure">Trace d'usure</option>
+                <option value="Commande SAV">Pièce à commander</option>
+            </select>
+            <textarea id="noteTexte" rows="3" placeholder="Votre observation..."></textarea>
+            <div class="btn-row">
+                <button class="action-btn" onclick="ajouterNote()">Enregistrer</button>
+                <button class="action-btn secondary" onclick="exporterWord()">Exporter (.doc)</button>
+            </div>
+        </div>
+        <div class="notes-list" id="listeNotes"></div>
+    </div>
+
+    <script>
+        let catalogueRef = {};
+
+        const fichesGeneriques = {
+            etapes: [
+                "Isoler la zone d'intervention et couper l'alimentation électrique si nécessaire.",
+                "Dévisser les éléments de fixation en conservant la visserie dans le bac de tri.",
+                "Extraire délicatement la pièce et inspecter l'état des surfaces de contact."
+            ],
+            criteres: {
+                fonction: "Assurer la liaison mécanique, thermique ou fonctionnelle au sein du sous-ensemble de la machine.",
+                materiau: "Matériau standard conforme aux spécifications constructeur Ultimaker.",
+                fixation: "Assemblage standardisé par vis métriques ou emboîtement direct.",
+                fabrication: "Usinage ou injection plastique conforme au cahier des charges Ultimaker.",
+                environnement: "Recyclable selon la filière adaptée (métaux / polymères techniques).",
+                dangerosite: "Aucun danger particulier hors manipulation de pièces mécaniques.",
+                inflammabilite: "Faible ou auto-extinguible selon le matériau.",
+                fluides_elec: "Composant passif ou actif selon son intégration dans le module.",
+                mobilite: "Démontable lors de la maintenance préventive ou corrective.",
+                historique: "Référence issue du catalogue officiel des pièces détachées."
+            }
+        };
+
+        const libellesCriteres = [
+            { cle: "fonction", num: "01", titre: "Rôle fonctionnel" },
+            { cle: "materiau", num: "02", titre: "Matériau" },
+            { cle: "fixation", num: "03", titre: "Fixation" },
+            { cle: "fabrication", num: "04", titre: "Fabrication" },
+            { cle: "geometrie", num: "05", titre: "Géométrie & Réf" },
+            { cle: "environnement", num: "06", titre: "Environnement" },
+            { cle: "dangerosite", num: "07", titre: "Sécurité" },
+            { cle: "inflammabilite", num: "08", titre: "Inflammabilité" },
+            { cle: "fluides_elec", num: "09", titre: "Électricité / Fluides" },
+            { cle: "mobilite", num: "10", titre: "Mobilité" },
+            { cle: "historique", num: "11", titre: "Historique & Notes" }
+        ];
+
+        let codePieceActuel = "PRINTHEAD";
+        let nomCAORecu = "PRINTHEAD";
+        let critereActuel = "fonction";
+        let etatsPieces = {};
+        let notesLocales = JSON.parse(localStorage.getItem("notes_buse_ihs")) || [];
+        const FIREBASE_URL = "https://ensamstagem1-default-rtdb.europe-west1.firebasedatabase.app/notes_buse.json";
+
+        async function chargerCatalogueCSV() {
+            const badgeCSV = document.getElementById("statutCSV");
+            try {
+                const reponse = await fetch("catalogue_ultimaker.csv?t=" + new Date().getTime());
+                if (!reponse.ok) throw new Error("CSV introuvable");
+
+                const texte = await reponse.text();
+                const lignes = texte.split(/\r?\n/);
+
+                for (let i = 1; i < lignes.length; i++) {
+                    if (!lignes[i].trim()) continue;
+                    const col = lignes[i].split(";");
+                    if (col.length >= 2) {
+                        const ref = col[0].trim();
+                        const nom = col[1].trim();
+                        catalogueRef[ref] = {
+                            ref: ref === "PRINTHEAD" ? "PRINTHEAD" : "#" + ref,
+                            nomOfficiel: nom
+                        };
+                    }
+                }
+
+                badgeCSV.textContent = `${Object.keys(catalogueRef).length} références chargées`;
+                recevoirMessage3DX("PRINTHEAD");
+            } catch (e) {
+                badgeCSV.textContent = "CSV non trouvé";
+                badgeCSV.style.color = "#D12F2F";
+            }
+        }
+
+        function extraireRefDepuisNomCATIA(nomBrut) {
+            if (!nomBrut) return "PRINTHEAD";
+            const texte = nomBrut.trim();
+            const match4 = texte.match(/(?:_|^|\b)(\d{4})(?:-|_|\b)/);
+            if (match4 && catalogueRef[match4[1]]) return match4[1];
+            if (catalogueRef[texte]) return texte;
+            return "PRINTHEAD";
+        }
+
+        function changerOnglet(idOnglet, boutonClique) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + idOnglet).classList.add('active');
+            boutonClique.classList.add('active');
+        }
+
+        function recevoirMessage3DX(messageBrut) {
+            nomCAORecu = messageBrut;
+            const codeExtrait = extraireRefDepuisNomCATIA(messageBrut);
+            chargerPieceParCode(codeExtrait);
+        }
+
+        function chargerPieceParCode(code) {
+            if (!catalogueRef[code]) code = "PRINTHEAD";
+            if (!catalogueRef[code]) return;
+
+            codePieceActuel = code;
+            const info = catalogueRef[code];
+
+            document.getElementById("badgeRef").textContent = info.ref;
+            document.getElementById("badgeCAO").textContent = nomCAORecu;
+            document.getElementById("nomPiece").textContent = info.nomOfficiel;
+
+            document.getElementById("valRef").textContent = info.ref;
+            document.getElementById("valPoids").textContent = "Calcul CAO";
+            document.getElementById("valMateriau").textContent = "Standard";
+
+            const badge = document.getElementById("badgeEtat");
+            if (etatsPieces[code]) {
+                badge.textContent = "État : " + etatsPieces[code].texte;
+                badge.style.background = etatsPieces[code].couleur;
+                badge.style.color = "#FFFFFF";
+            } else {
+                badge.textContent = "État : Non contrôlé";
+                badge.style.background = "#F0F2F5";
+                badge.style.color = "#1D1D1F";
+            }
+
+            const listeEtapes = document.getElementById("listeEtapes");
+            listeEtapes.innerHTML = "";
+            fichesGeneriques.etapes.forEach(e => {
+                const li = document.createElement("li");
+                li.textContent = e;
+                listeEtapes.appendChild(li);
+            });
+
+            genererGrilleCriteres();
+            afficherDetailCritere(critereActuel);
+            afficherNotes();
+        }
+
+        function genererGrilleCriteres() {
+            const grille = document.getElementById("grilleCriteres");
+            grille.innerHTML = "";
+            libellesCriteres.forEach(item => {
+                const btn = document.createElement("button");
+                btn.className = "crit-btn" + (item.cle === critereActuel ? " active" : "");
+                btn.innerHTML = `
+                    <span class="crit-num">Critère ${item.num}</span>
+                    <span class="crit-name">${item.titre}</span>
+                `;
+                btn.onclick = () => afficherDetailCritere(item.cle);
+                grille.appendChild(btn);
+            });
+        }
+
+        function afficherDetailCritere(cle) {
+            critereActuel = cle;
+            genererGrilleCriteres();
+            const info = catalogueRef[codePieceActuel];
+            if (!info) return;
+            const infoCritere = libellesCriteres.find(c => c.cle === cle);
+
+            document.getElementById("titreCritere").textContent = `${infoCritere.num}. ${infoCritere.titre} — [${info.ref}]`;
+            
+            let texte = "";
+            if (cle === "geometrie") {
+                texte = `Référence catalogue : ${info.ref}\nNom officiel : ${info.nomOfficiel}\nInstance CATIA détectée : ${nomCAORecu}`;
+            } else {
+                texte = fichesGeneriques.criteres[cle];
+            }
+
+            if (cle === "historique") {
+                const notesDeLaPiece = notesLocales.filter(n => n.code === codePieceActuel);
+                if (notesDeLaPiece.length > 0) {
+                    texte += "\n\nNOTES OPÉRATEURS : " + notesDeLaPiece.map(n => `[${n.tag}] ${n.texte} (${n.auteur})`).join(" | ");
+                }
+            }
+            document.getElementById("texteCritere").textContent = texte;
+        }
+
+        function definirEtat(texteEtat, couleurHex) {
+            etatsPieces[codePieceActuel] = { texte: texteEtat, couleur: couleurHex };
+            chargerPieceParCode(codePieceActuel);
+        }
+
+        function ajouterNote() {
+            const auteur = document.getElementById("noteAuteur").value.trim() || "Opérateur";
+            const tag = document.getElementById("noteTag").value;
+            const texte = document.getElementById("noteTexte").value.trim();
+            if (!texte || !catalogueRef[codePieceActuel]) return;
+
+            const info = catalogueRef[codePieceActuel];
+            const nouvelleNote = {
+                code: codePieceActuel,
+                nomPiece: `${info.ref} - ${info.nomOfficiel}`,
+                auteur: auteur,
+                tag: tag,
+                texte: texte,
+                date: new Date().toLocaleString("fr-FR")
+            };
+
+            notesLocales.unshift(nouvelleNote);
+            localStorage.setItem("notes_buse_ihs", JSON.stringify(notesLocales));
+            fetch(FIREBASE_URL, { method: "POST", body: JSON.stringify(nouvelleNote) }).catch(() => {});
+
+            document.getElementById("noteTexte").value = "";
+            afficherNotes();
+            if (critereActuel === "historique") afficherDetailCritere("historique");
+        }
+
+        function afficherNotes() {
+            const conteneur = document.getElementById("listeNotes");
+            conteneur.innerHTML = "";
+            if (notesLocales.length === 0) {
+                conteneur.innerHTML = "<p style='color:#6E6E73; font-size:12.5px;'>Aucune note enregistrée.</p>";
+                return;
+            }
+            notesLocales.forEach(n => {
+                const div = document.createElement("div");
+                div.className = "note-item";
+                div.innerHTML = `
+                    <div class="note-meta">${n.date} — <strong>${n.auteur}</strong> sur <strong>${n.nomPiece}</strong></div>
+                    <div><span class="note-tag">${n.tag}</span>${n.texte}</div>
+                `;
+                conteneur.appendChild(div);
+            });
+        }
+
+        function exporterWord() {
+            let contenuHTML = `<html><head><meta charset='utf-8'></head><body><h1>Rapport d'expertise</h1><ul>`;
+            for (const code in catalogueRef) {
+                if (etatsPieces[code]) {
+                    const p = catalogueRef[code];
+                    contenuHTML += `<li><strong>[${p.ref}] ${p.nomOfficiel}</strong> : ${etatsPieces[code].texte}</li>`;
+                }
+            }
+            contenuHTML += `</ul></body></html>`;
+            const blob = new Blob(['\ufeff', contenuHTML], { type: 'application/msword' });
+            const lien = document.createElement('a');
+            lien.href = URL.createObjectURL(blob);
+            lien.download = 'Rapport_Expertise.doc';
+            lien.click();
+        }
+
+        window.addEventListener("message", function (event) {
+            if (!event.data) return;
+            let msg = typeof event.data === 'string' ? event.data.trim().replace(/^['"]|['"]$/g, '') : "";
+            if (msg) recevoirMessage3DX(msg);
+        });
+
+        chargerCatalogueCSV();
+    </script>
+</body>
+</html>
