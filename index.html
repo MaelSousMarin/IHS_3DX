@@ -3,116 +3,403 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IHS Passeport Numérique - Catalogue CSV Minimal</title>
+    <title>IHS Passeport Numérique - 3DEXPERIENCE</title>
     <style>
         :root {
-            --bg-main: #f8fafc;
-            --bg-card: #ffffff;
-            --bg-hover: #f1f5f9;
-            --primary: #0284c7;
-            --accent: #f59e0b;
-            --text-main: #0f172a;
-            --text-muted: #64748b;
-            --success: #16a34a;
-            --warning: #eab308;
-            --danger: #dc2626;
-            --border: #e2e8f0;
+            /* Charte Graphique Officielle Dassault Systèmes (3DS) */
+            --ds-blue-dark: #002C4B;     /* Bleu Nuit 3DS */
+            --ds-blue-primary: #005386;  /* Bleu Corporate 3DS */
+            --ds-blue-light: #0076BA;    /* Bleu Action / Survol */
+            --ds-blue-tint: #EBF4FA;     /* Fond de sélection clair */
+            --ds-cyan: #00A3E0;          /* Accent technologique 3DS */
+            
+            /* Neutres & Fonds Thème Clair */
+            --bg-main: #F4F6F8;
+            --bg-card: #FFFFFF;
+            --bg-pill-bar: #E6E9EF;      /* Fond gris doux de la barre capsule */
+            --bg-hover: #E8EEF3;
+            --text-main: #1D1D1F;
+            --text-muted: #626C75;
+            --border: #D1D9E0;
+
+            /* Couleurs fonctionnelles */
+            --success: #28894B;
+            --warning: #E67E22;
+            --danger: #D12F2F;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
-        body { background-color: var(--bg-main); color: var(--text-main); padding: 12px; overflow-x: hidden; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: '3ds', 'Segoe UI', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+        }
 
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            padding: 14px;
+            overflow-x: hidden;
+        }
+
+        /* =========================================================
+           1. EN-TÊTE FIDÈLE AU CROQUIS (Réf + Acteur / Nom pièce)
+           ========================================================= */
         .header {
-            background: var(--bg-card); padding: 14px 16px; border-radius: 10px;
-            border: 1px solid var(--border); margin-bottom: 14px; display: flex;
-            justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            background: var(--bg-card);
+            padding: 14px 18px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            margin-bottom: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            box-shadow: 0 2px 6px rgba(0, 44, 75, 0.04);
         }
-        .ref-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap; }
-        .ref-badge { background: var(--accent); color: #fff; font-weight: 800; font-size: 12px; padding: 3px 8px; border-radius: 4px; }
-        .cad-badge { background: var(--bg-hover); color: var(--text-muted); font-family: monospace; font-size: 11px; padding: 3px 8px; border-radius: 4px; border: 1px solid var(--border); }
-        .csv-status {
-            font-size: 11px; padding: 3px 8px; border-radius: 4px;
-            background: #dcfce7; color: #15803d; font-weight: bold;
+
+        .piece-title-box {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
         }
-        .piece-title-box h1 { font-size: 19px; color: var(--primary); }
-        .piece-title-box p { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
 
-        .status-badge { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border); }
+        .ref-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
 
-        .tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+        .ref-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .ref-item strong {
+            color: var(--ds-blue-primary);
+            font-weight: 700;
+        }
+
+        .cad-value {
+            font-family: Consolas, monospace;
+            background: var(--bg-main);
+            padding: 2px 8px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            font-size: 12px;
+            color: var(--text-main);
+        }
+
+        .csv-dot {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .piece-title-box h1 {
+            font-size: 20px;
+            color: var(--ds-blue-dark);
+            font-weight: 700;
+            letter-spacing: -0.2px;
+        }
+
+        .status-badge {
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            background: var(--bg-main);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+        }
+
+        /* =========================================================
+           2. BARRE D'ONGLETS EN PILULE (STYLE CAPSULE)
+           ========================================================= */
+        .tabs-pill-container {
+            background: var(--bg-pill-bar);
+            padding: 5px;
+            border-radius: 999px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+            margin-bottom: 18px;
+        }
+
         .tab-btn {
-            flex: 1; padding: 11px; background: var(--bg-card); color: var(--text-muted);
-            border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px;
-            transition: all 0.2s;
+            flex: 1;
+            padding: 10px 18px;
+            background: transparent;
+            color: var(--text-main);
+            border: none;
+            border-radius: 999px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            text-align: center;
+            transition: all 0.2s ease;
         }
-        .tab-btn:hover { background: var(--bg-hover); color: var(--text-main); }
-        .tab-btn.active { background: var(--primary); color: #ffffff; border-color: var(--primary); }
+
+        .tab-btn:hover:not(.active) {
+            color: var(--ds-blue-primary);
+            background: rgba(255, 255, 255, 0.45);
+        }
+
+        .tab-btn.active {
+            background: var(--ds-blue-primary);
+            color: #FFFFFF;
+            box-shadow: 0 2px 6px rgba(0, 83, 134, 0.25);
+        }
+
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
-        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(125px, 1fr)); gap: 10px; margin-bottom: 14px; }
-        .metric-card { background: var(--bg-card); padding: 10px; border-radius: 8px; border: 1px solid var(--border); text-align: center; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03); }
-        .metric-card .label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; }
-        .metric-card .value { font-size: 15px; font-weight: bold; margin-top: 4px; color: var(--primary); }
-
-        .criteria-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); gap: 8px; margin-bottom: 14px; }
-        .crit-btn {
-            background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main);
-            padding: 10px; border-radius: 8px; text-align: left; cursor: pointer; display: flex; flex-direction: column; gap: 3px;
-            transition: all 0.15s;
+        /* =========================================================
+           3. CONTENU DES ONGLETS (CHARTE 3DS CLAIRE)
+           ========================================================= */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(125px, 1fr));
+            gap: 10px;
+            margin-bottom: 14px;
         }
-        .crit-btn:hover { border-color: var(--primary); background: var(--bg-hover); }
-        .crit-btn.active { border-color: var(--primary); background: #e0f2fe; }
-        .crit-btn .crit-num { font-size: 10px; color: var(--primary); font-weight: bold; }
-        .crit-btn .crit-name { font-size: 12px; font-weight: 600; }
+        .metric-card {
+            background: var(--bg-card);
+            padding: 11px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            border-top: 3px solid var(--ds-cyan);
+            text-align: center;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+        }
+        .metric-card .label {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+        }
+        .metric-card .value {
+            font-size: 15px;
+            font-weight: 700;
+            margin-top: 4px;
+            color: var(--ds-blue-primary);
+        }
 
-        .detail-box { background: var(--bg-card); border: 1px solid var(--primary); border-radius: 10px; padding: 14px; min-height: 100px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); }
-        .detail-box h3 { color: var(--primary); font-size: 15px; margin-bottom: 6px; }
-        .detail-box p { font-size: 13.5px; line-height: 1.5; white-space: pre-line; color: var(--text-main); }
+        /* Grille des 11 critères */
+        .criteria-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+        .crit-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 10px 12px;
+            border-radius: 8px;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            transition: all 0.15s ease;
+        }
+        .crit-btn:hover {
+            border-color: var(--ds-blue-light);
+            background: var(--bg-hover);
+        }
+        .crit-btn.active {
+            border-color: var(--ds-blue-primary);
+            background: var(--ds-blue-tint);
+            box-shadow: inset 3px 0 0 var(--ds-blue-primary);
+        }
+        .crit-btn .crit-num {
+            font-size: 10px;
+            color: var(--ds-blue-light);
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+        .crit-btn .crit-name {
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--ds-blue-dark);
+        }
 
-        .diag-section { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 12px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03); }
-        .diag-section h3 { color: var(--primary); margin-bottom: 8px; font-size: 15px; }
-        .alert-box { background: #fef2f2; border-left: 4px solid var(--danger); color: #991b1b; padding: 10px 12px; border-radius: 4px; margin-bottom: 12px; font-size: 13px; font-weight: 500; }
-        .steps-list { padding-left: 20px; line-height: 1.6; font-size: 13.5px; }
-        .state-buttons { display: flex; gap: 8px; margin-top: 10px; }
-        .state-btn { flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: #fff; font-size: 13px; }
+        /* Zone de détail du critère */
+        .detail-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-top: 3px solid var(--ds-blue-primary);
+            border-radius: 8px;
+            padding: 14px 16px;
+            min-height: 100px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+        .detail-box h3 {
+            color: var(--ds-blue-primary);
+            font-size: 14.5px;
+            margin-bottom: 6px;
+            font-weight: 700;
+        }
+        .detail-box p {
+            font-size: 13.5px;
+            line-height: 1.5;
+            white-space: pre-line;
+            color: var(--text-main);
+        }
+
+        /* Onglet Diagnostic */
+        .diag-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+        }
+        .diag-section h3 {
+            color: var(--ds-blue-primary);
+            margin-bottom: 8px;
+            font-size: 14.5px;
+        }
+        .alert-box {
+            background: #FDF2F2;
+            border: 1px solid #F5C6CB;
+            border-left: 4px solid var(--danger);
+            color: #842029;
+            padding: 10px 12px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .steps-list {
+            padding-left: 20px;
+            line-height: 1.6;
+            font-size: 13.5px;
+        }
+        .state-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .state-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 999px;
+            font-weight: 700;
+            cursor: pointer;
+            color: #FFFFFF;
+            font-size: 12.5px;
+            transition: opacity 0.15s;
+        }
+        .state-btn:hover { opacity: 0.9; }
         .btn-ok { background: var(--success); }
-        .btn-warn { background: var(--warning); color: #000; }
+        .btn-warn { background: var(--warning); color: #FFFFFF; }
         .btn-err { background: var(--danger); }
 
-        .note-form { background: var(--bg-card); padding: 14px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03); }
-        .note-form input, .note-form select, .note-form textarea { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-main); color: var(--text-main); font-size: 13px; }
+        /* Onglet Bloc-note */
+        .note-form {
+            background: var(--bg-card);
+            padding: 14px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            margin-bottom: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+        }
+        .note-form input, .note-form select, .note-form textarea {
+            width: 100%;
+            padding: 9px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--bg-main);
+            color: var(--text-main);
+            font-size: 13px;
+        }
+        .note-form input:focus, .note-form select:focus, .note-form textarea:focus {
+            outline: none;
+            border-color: var(--ds-blue-primary);
+            background: #FFFFFF;
+        }
         .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
-        .action-btn { background: var(--primary); color: #fff; border: none; padding: 9px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; }
-        .action-btn.secondary { background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border); }
+        .action-btn {
+            background: var(--ds-blue-primary);
+            color: #FFFFFF;
+            border: none;
+            padding: 9px 18px;
+            border-radius: 999px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 12.5px;
+            transition: background 0.15s;
+        }
+        .action-btn:hover { background: var(--ds-blue-light); }
+        .action-btn.secondary {
+            background: var(--bg-pill-bar);
+            color: var(--ds-blue-dark);
+        }
+        .action-btn.secondary:hover { background: var(--border); }
         .notes-list { display: flex; flex-direction: column; gap: 8px; }
-        .note-item { background: var(--bg-card); border: 1px solid var(--border); padding: 10px; border-radius: 8px; font-size: 13px; }
-        .note-item .note-meta { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
-        .note-item .note-tag { display: inline-block; background: #e0f2fe; color: var(--primary); padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-right: 6px; }
+        .note-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--ds-blue-primary);
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+        .note-item .note-meta {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+        .note-item .note-tag {
+            display: inline-block;
+            background: var(--ds-blue-tint);
+            color: var(--ds-blue-primary);
+            border: 1px solid #B8D9EE;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            margin-right: 6px;
+        }
     </style>
 </head>
 <body>
 
+    <!-- EN-TÊTE FIDÈLE AU SCHÉMA : Ligne Réf + Acteur au-dessus, Nom de la pièce en dessous -->
     <div class="header">
         <div class="piece-title-box">
             <div class="ref-row">
-                <span class="ref-badge" id="badgeRef">RÉF. #----</span>
-                <span class="cad-badge" id="badgeCAO">Acteur CATIA : --</span>
-                <span class="csv-status" id="statutCSV">⏳ Lecture CSV...</span>
+                <span class="ref-item">Réf : <strong id="badgeRef">#----</strong></span>
+                <span class="ref-item">Acteur : <span class="cad-value" id="badgeCAO">--</span></span>
+                <span class="csv-dot" id="statutCSV">⏳ CSV...</span>
             </div>
-            <h1 id="nomPiece">Chargement...</h1>
-            <p id="sousTitrePiece">Catalogue Officiel Ultimaker 2+</p>
+            <h1 id="nomPiece">Chargement de la pièce...</h1>
         </div>
         <div id="badgeEtat" class="status-badge">État : Non contrôlé</div>
     </div>
 
-    <div class="tabs">
-        <button class="tab-btn active" onclick="changerOnglet('infos', this)">📋 1. Passeport</button>
-        <button class="tab-btn" onclick="changerOnglet('diagnostic', this)">🔧 2. Diagnostic</button>
-        <button class="tab-btn" onclick="changerOnglet('notes', this)">📝 3. Bloc-Notes</button>
+    <!-- BARRE D'ONGLETS EN PILULE (STYLE CAPSULE) -->
+    <div class="tabs-pill-container">
+        <button class="tab-btn active" onclick="changerOnglet('infos', this)">Passeport</button>
+        <button class="tab-btn" onclick="changerOnglet('diagnostic', this)">Diagnostic</button>
+        <button class="tab-btn" onclick="changerOnglet('notes', this)">Bloc-note</button>
     </div>
 
+    <!-- ONGLET 1 : PASSEPORT -->
     <div id="tab-infos" class="tab-content active">
         <div class="metrics-grid">
             <div class="metric-card"><div class="label">N° Réf</div><div class="value" id="valRef">--</div></div>
@@ -127,6 +414,7 @@
         </div>
     </div>
 
+    <!-- ONGLET 2 : DIAGNOSTIC -->
     <div id="tab-diagnostic" class="tab-content">
         <div class="alert-box" id="alerteSecurite">⚠️ Vérifier la température et couper l'alimentation avant intervention.</div>
         <div class="diag-section"><h3>🔩 Outillage requis</h3><p id="outilsRequis">Clé Allen 2.0 mm, Clé à douille 7 mm.</p></div>
@@ -134,13 +422,14 @@
         <div class="diag-section">
             <h3>🩺 Déclarer l'état</h3>
             <div class="state-buttons">
-                <button class="state-btn btn-ok" onclick="definirEtat('Opérationnel', '#16a34a')">✅ Opérationnel</button>
-                <button class="state-btn btn-warn" onclick="definirEtat('Usé', '#eab308')">⚠️ Usé</button>
-                <button class="state-btn btn-err" onclick="definirEtat('À remplacer', '#dc2626')">❌ À remplacer</button>
+                <button class="state-btn btn-ok" onclick="definirEtat('Opérationnel', '#28894B')">✅ Opérationnel</button>
+                <button class="state-btn btn-warn" onclick="definirEtat('Usé', '#E67E22')">⚠️ Usé</button>
+                <button class="state-btn btn-err" onclick="definirEtat('À remplacer', '#D12F2F')">❌ À remplacer</button>
             </div>
         </div>
     </div>
 
+    <!-- ONGLET 3 : BLOC-NOTE -->
     <div id="tab-notes" class="tab-content">
         <div class="note-form">
             <input type="text" id="noteAuteur" placeholder="Nom de l'opérateur">
@@ -151,8 +440,8 @@
             </select>
             <textarea id="noteTexte" rows="3" placeholder="Votre observation..."></textarea>
             <div class="btn-row">
-                <button class="action-btn" onclick="ajouterNote()">💾 Enregistrer</button>
-                <button class="action-btn secondary" onclick="exporterWord()">📄 Exporter (.doc)</button>
+                <button class="action-btn" onclick="ajouterNote()">Enregistrer</button>
+                <button class="action-btn secondary" onclick="exporterWord()">Exporter (.doc)</button>
             </div>
         </div>
         <div class="notes-list" id="listeNotes"></div>
@@ -225,12 +514,11 @@
                     }
                 }
 
-                badgeCSV.textContent = `✅ ${Object.keys(catalogueRef).length} pièces chargées`;
+                badgeCSV.textContent = `• ${Object.keys(catalogueRef).length} réf.`;
                 recevoirMessage3DX("PRINTHEAD");
             } catch (e) {
-                badgeCSV.textContent = "⚠️ Erreur chargement CSV";
-                badgeCSV.style.background = "#fee2e2";
-                badgeCSV.style.color = "#b91c1c";
+                badgeCSV.textContent = "⚠️ CSV non trouvé";
+                badgeCSV.style.color = "#D12F2F";
             }
         }
 
@@ -263,10 +551,9 @@
             codePieceActuel = code;
             const info = catalogueRef[code];
 
-            document.getElementById("badgeRef").textContent = "RÉF. " + info.ref;
-            document.getElementById("badgeCAO").textContent = "Acteur : " + nomCAORecu;
+            document.getElementById("badgeRef").textContent = info.ref;
+            document.getElementById("badgeCAO").textContent = nomCAORecu;
             document.getElementById("nomPiece").textContent = info.nomOfficiel;
-            document.getElementById("sousTitrePiece").textContent = "Référence extraite du catalogue officiel";
 
             document.getElementById("valRef").textContent = info.ref;
             document.getElementById("valPoids").textContent = "Calcul CAO";
@@ -276,13 +563,13 @@
             if (etatsPieces[code]) {
                 badge.textContent = "État : " + etatsPieces[code].texte;
                 badge.style.background = etatsPieces[code].couleur;
-                badge.style.color = etatsPieces[code].texte === "Usé" ? "#000" : "#fff";
+                badge.style.color = "#FFFFFF";
                 badge.style.borderColor = "transparent";
             } else {
                 badge.textContent = "État : Non contrôlé";
-                badge.style.background = "#f1f5f9";
-                badge.style.color = "#0f172a";
-                badge.style.borderColor = "#e2e8f0";
+                badge.style.background = "#F4F6F8";
+                badge.style.color = "#1D1D1F";
+                badge.style.borderColor = "#D1D9E0";
             }
 
             const listeEtapes = document.getElementById("listeEtapes");
@@ -369,7 +656,7 @@
             const conteneur = document.getElementById("listeNotes");
             conteneur.innerHTML = "";
             if (notesLocales.length === 0) {
-                conteneur.innerHTML = "<p style='color:#64748b; font-size:12px;'>Aucune note.</p>";
+                conteneur.innerHTML = "<p style='color:#626C75; font-size:12px;'>Aucune note.</p>";
                 return;
             }
             notesLocales.forEach(n => {
