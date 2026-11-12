@@ -224,14 +224,12 @@
                         color 0.22s ease;
         }
 
-        /* Agrandissement au survol */
         .crit-btn:hover {
             transform: scale(1.045);
             box-shadow: var(--shadow-hover);
             z-index: 2;
         }
 
-        /* Changement de couleur uni quand cliqué */
         .crit-btn.active {
             background: var(--ds-blue-primary);
             box-shadow: 0 6px 16px rgba(0, 83, 134, 0.28);
@@ -508,8 +506,9 @@
             </select>
             <textarea id="noteTexte" rows="3" placeholder="Votre observation..."></textarea>
             <div class="btn-row">
-                <button class="action-btn" onclick="ajouterNote()">Enregistrer</button>
-                <button class="action-btn secondary" onclick="exporterWord()">Exporter (.doc)</button>
+                <button class="action-btn" onclick="ajouterNote()">Enregistrer la note</button>
+                <button class="action-btn secondary" onclick="exporterWord()">Exporter Word (.doc)</button>
+                <button class="action-btn secondary" onclick="exporterExcel()">Exporter Excel (.xls)</button>
             </div>
         </div>
         <div class="notes-list" id="listeNotes"></div>
@@ -555,7 +554,9 @@
         let codePieceActuel = "PRINTHEAD";
         let nomCAORecu = "PRINTHEAD";
         let critereActuel = "fonction";
-        let etatsPieces = {};
+        
+        // --- MISE À JOUR : Récupération des états et notes depuis le cache (localStorage) ---
+        let etatsPieces = JSON.parse(localStorage.getItem("etats_buse_ihs")) || {};
         let notesLocales = JSON.parse(localStorage.getItem("notes_buse_ihs")) || [];
         const FIREBASE_URL = "https://ensamstagem1-default-rtdb.europe-west1.firebasedatabase.app/notes_buse.json";
 
@@ -690,8 +691,10 @@
             document.getElementById("texteCritere").textContent = texte;
         }
 
+        // --- MISE À JOUR : Sauvegarde automatique de l'état (localStorage) ---
         function definirEtat(texteEtat, couleurHex) {
             etatsPieces[codePieceActuel] = { texte: texteEtat, couleur: couleurHex };
+            localStorage.setItem("etats_buse_ihs", JSON.stringify(etatsPieces));
             chargerPieceParCode(codePieceActuel);
         }
 
@@ -738,19 +741,160 @@
             });
         }
 
+        // --- MISE À JOUR : Outils et Exports Word/Excel croisés ---
+        function obtenirPiecesAnalysees() {
+            const codes = new Set([
+                ...Object.keys(etatsPieces),
+                ...notesLocales.map(n => n.code)
+            ]);
+            return Array.from(codes);
+        }
+
         function exporterWord() {
-            let contenuHTML = `<html><head><meta charset='utf-8'></head><body><h1>Rapport d'expertise</h1><ul>`;
-            for (const code in catalogueRef) {
-                if (etatsPieces[code]) {
-                    const p = catalogueRef[code];
-                    contenuHTML += `<li><strong>[${p.ref}] ${p.nomOfficiel}</strong> : ${etatsPieces[code].texte}</li>`;
-                }
+            const codesAnalyses = obtenirPiecesAnalysees();
+            if (codesAnalyses.length === 0) {
+                alert("Aucune pièce analysée ou note enregistrée à exporter.");
+                return;
             }
-            contenuHTML += `</ul></body></html>`;
-            const blob = new Blob(['\ufeff', contenuHTML], { type: 'application/msword' });
+
+            const dateJour = new Date().toLocaleString("fr-FR");
+            let html = `
+            <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+            <head>
+                <meta charset='utf-8'>
+                <style>
+                    body { font-family: Arial, sans-serif; color: #1D1D1F; }
+                    h1 { color: #005386; border-bottom: 2px solid #005386; padding-bottom: 6px; }
+                    h2 { color: #002C4B; margin-top: 24px; font-size: 16px; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+                    th { background-color: #005386; color: #FFFFFF; padding: 8px; text-align: left; border: 1px solid #CCCCCC; }
+                    td { padding: 8px; border: 1px solid #CCCCCC; vertical-align: top; font-size: 13px; }
+                </style>
+            </head>
+            <body>
+                <h1>Rapport d'Expertise & Maintenance — 3DEXPERIENCE</h1>
+                <p><strong>Date d'édition :</strong> ${dateJour}</p>
+
+                <h2>Synthèse des pièces analysées et observations</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width:15%;">Référence</th>
+                            <th style="width:25%;">Désignation</th>
+                            <th style="width:15%;">État déclaré</th>
+                            <th style="width:45%;">Notes & Observations</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+
+            codesAnalyses.forEach(code => {
+                const info = catalogueRef[code] || { ref: code, nomOfficiel: "Pièce hors catalogue" };
+                const etat = etatsPieces[code] ? etatsPieces[code].texte : "Non contrôlé";
+                const notesPiece = notesLocales.filter(n => n.code === code);
+
+                let htmlNotes = "<em>Aucune note</em>";
+                if (notesPiece.length > 0) {
+                    htmlNotes = notesPiece.map(n => 
+                        `<div><strong>[${n.tag}]</strong> ${n.texte} <br><small style="color:#6E6E73;">(${n.auteur} - ${n.date})</small></div>`
+                    ).join("<hr style='border:0; border-top:1px solid #EEE; margin:4px 0;'>");
+                }
+
+                html += `
+                        <tr>
+                            <td><strong>${info.ref}</strong></td>
+                            <td>${info.nomOfficiel}</td>
+                            <td><strong>${etat}</strong></td>
+                            <td>${htmlNotes}</td>
+                        </tr>`;
+            });
+
+            html += `
+                    </tbody>
+                </table>
+            </body>
+            </html>`;
+
+            const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
             const lien = document.createElement('a');
             lien.href = URL.createObjectURL(blob);
-            lien.download = 'Rapport_Expertise.doc';
+            lien.download = 'Rapport_Expertise_3DX.doc';
+            lien.click();
+        }
+
+        function exporterExcel() {
+            const codesAnalyses = obtenirPiecesAnalysees();
+            if (codesAnalyses.length === 0) {
+                alert("Aucune donnée à exporter vers Excel.");
+                return;
+            }
+
+            let htmlExcel = `
+            <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+            <head>
+                <meta charset="utf-8">
+                <style>
+                    table { border-collapse: collapse; font-family: Arial, sans-serif; }
+                    th { background-color: #005386; color: #FFFFFF; font-weight: bold; border: 1px solid #000000; padding: 6px; }
+                    td { border: 1px solid #CCCCCC; padding: 6px; vertical-align: top; }
+                </style>
+            </head>
+            <body>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Référence</th>
+                            <th>Nom Officiel</th>
+                            <th>État de la pièce</th>
+                            <th>Catégorie Note</th>
+                            <th>Auteur</th>
+                            <th>Date</th>
+                            <th>Commentaire / Observation</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+
+            codesAnalyses.forEach(code => {
+                const info = catalogueRef[code] || { ref: code, nomOfficiel: "Pièce inconnue" };
+                const etat = etatsPieces[code] ? etatsPieces[code].texte : "Non contrôlé";
+                const notesPiece = notesLocales.filter(n => n.code === code);
+
+                if (notesPiece.length === 0) {
+                    htmlExcel += `
+                        <tr>
+                            <td>${info.ref}</td>
+                            <td>${info.nomOfficiel}</td>
+                            <td>${etat}</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>Aucune observation saisie</td>
+                        </tr>`;
+                } else {
+                    notesPiece.forEach(n => {
+                        htmlExcel += `
+                        <tr>
+                            <td>${info.ref}</td>
+                            <td>${info.nomOfficiel}</td>
+                            <td>${etat}</td>
+                            <td>${n.tag}</td>
+                            <td>${n.auteur}</td>
+                            <td>${n.date}</td>
+                            <td>${n.texte}</td>
+                        </tr>`;
+                    });
+                }
+            });
+
+            htmlExcel += `
+                    </tbody>
+                </table>
+            </body>
+            </html>`;
+
+            const blob = new Blob(['\ufeff', htmlExcel], { type: 'application/vnd.ms-excel' });
+            const lien = document.createElement('a');
+            lien.href = URL.createObjectURL(blob);
+            lien.download = 'Suivi_Maintenance_3DX.xls';
             lien.click();
         }
 
