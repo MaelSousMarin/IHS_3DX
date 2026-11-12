@@ -227,12 +227,10 @@
             </div>
         </section>
     </div>
-
     <script>
         let listeAnimations = [];
         let animationActive = "";
 
-        // 1. Afficher les cartes d'animations dans la grille
         function afficherListeAnimations() {
             const conteneur = document.getElementById("conteneurAnimations");
             const badgeCount = document.getElementById("badgeCount");
@@ -274,7 +272,7 @@
             });
         }
 
-        // 2. Envoyer l'ordre de lancer l'animation à 3DEXPERIENCE au clic
+        // Envoi vers 3DEXPERIENCE selon la doc officielle (getting started.pdf p. 28)
         function lancerAnimation(nomAnimation) {
             animationActive = nomAnimation;
             afficherListeAnimations();
@@ -286,18 +284,12 @@
                 name: nomAnimation
             });
 
-            // Envoi vers la fenêtre parente 3DEXPERIENCE (WebViewer2DActor / WebPlayer)
-            if (window.parent && window.parent !== window) {
-                window.parent.postMessage(message3DX, "*");
-            }
-            if (window.top && window.top !== window && window.top !== window.parent) {
-                window.top.postMessage(message3DX, "*");
-            }
-            window.postMessage(message3DX, "*");
+            window.parent.postMessage(message3DX, "*");
         }
 
-        // 3. Traiter les messages envoyés par le beScript de 3DEXPERIENCE
-        function traiterMessage3DX(donneesBrutes) {
+        // Réception de la liste des animations envoyée par 3DEXPERIENCE
+        window.addEventListener("message", (iEvent) => {
+            let donneesBrutes = iEvent.data;
             if (!donneesBrutes) return;
 
             try {
@@ -305,57 +297,22 @@
                     ? JSON.parse(donneesBrutes)
                     : donneesBrutes;
 
-                // Ignorer nos propres messages sortants
-                if (paquet && (paquet.type === "PLAY_ANIMATION" || paquet.type === "WEB_READY")) {
-                    return;
-                }
-
-                // Cas A : Réception d'un objet { type: "ANIMATION_LIST", animations: [...] }
                 if (paquet && Array.isArray(paquet.animations)) {
                     listeAnimations = paquet.animations;
                     document.getElementById("badgeStatus").textContent = "Synchronisé avec la scène";
                     afficherListeAnimations();
-                    return;
-                }
-
-                // Cas B : Réception directe d'un tableau d'animations [...]
-                if (Array.isArray(paquet)) {
+                } else if (Array.isArray(paquet)) {
                     listeAnimations = paquet;
                     document.getElementById("badgeStatus").textContent = "Synchronisé avec la scène";
                     afficherListeAnimations();
-                    return;
                 }
-            } catch (e) {
-                // Si 3DEXPERIENCE envoie une liste séparée par des points-virgules ou virgules
-                if (typeof donneesBrutes === "string") {
-                    const texte = donneesBrutes.trim().replace(/^['"]|['"]$/g, "");
-                    if (texte && !texte.includes("PLAY_ANIMATION")) {
-                        listeAnimations = texte.split(/[;,]/).map(s => s.trim()).filter(Boolean);
-                        document.getElementById("badgeStatus").textContent = "Synchronisé avec la scène";
-                        afficherListeAnimations();
-                    }
-                }
-            }
-        }
-
-        // Écoute des messages entrants depuis 3DEXPERIENCE (sendMessage)
-        window.addEventListener("message", function (event) {
-            if (!event.data) return;
-            traiterMessage3DX(event.data);
+            } catch (e) {}
         });
 
-        document.addEventListener("message", function (event) {
-            if (!event.data && !event.detail) return;
-            traiterMessage3DX(event.data || event.detail);
-        });
-
-        // Signaler à 3DEXPERIENCE que la page web est prête à recevoir la liste
-        window.addEventListener("load", function () {
-            const msgPret = JSON.stringify({ type: "WEB_READY" });
-            if (window.parent && window.parent !== window) {
-                window.parent.postMessage(msgPret, "*");
-            }
-        });
+        // Notification d'initialisation officielle (getting started.pdf p. 32)
+        window.onload = function () {
+            window.parent.postMessage("ready", "*");
+        };
     </script>
 </body>
 </html>
