@@ -249,45 +249,62 @@
 
             listeAnimations.forEach((anim, index) => {
                 const nomAnim = typeof anim === "string" ? anim : anim.name;
-                const dureeAnim = (anim && typeof anim.duration === "number" && anim.duration > 0)
+                const estActive = (nomAnim === animationActive);
+
+                const dureeTexte = (anim && typeof anim.duration === "number" && anim.duration > 0)
                     ? anim.duration.toFixed(1) + " s"
-                    : "Lancer au clic";
+                    : "Animation";
+
+                const sousTexte = estActive ? "En cours (cliquer pour stopper)" : dureeTexte;
+                const iconeAction = estActive ? "■" : "▶";
 
                 const btn = document.createElement("button");
-                btn.className = "anim-btn" + (nomAnim === animationActive ? " active" : "");
+                btn.className = "anim-btn" + (estActive ? " active" : "");
 
                 const numFormate = String(index + 1).padStart(2, "0");
 
                 btn.innerHTML =
                     "<span class='anim-num'>Animation " + numFormate + "</span>" +
                     "<span class='anim-name'>" + nomAnim + "</span>" +
-                    "<span class='anim-meta'>" + dureeAnim + "</span>" +
-                    "<span class='anim-action-icon'>+</span>";
+                    "<span class='anim-meta'>" + sousTexte + "</span>" +
+                    "<span class='anim-action-icon'>" + iconeAction + "</span>";
 
                 btn.onclick = function () {
-                    lancerAnimation(nomAnim);
+                    basculerAnimation(nomAnim);
                 };
 
                 conteneur.appendChild(btn);
             });
         }
 
-        // Envoi vers 3DEXPERIENCE selon la doc officielle (getting started.pdf p. 28)
-        function lancerAnimation(nomAnimation) {
-            animationActive = nomAnimation;
-            afficherListeAnimations();
+        // 1er clic = PLAY_ANIMATION / 2e clic sur la même = STOP_ANIMATION
+        function basculerAnimation(nomAnimation) {
+            if (animationActive === nomAnimation) {
+                // 2e clic : on stoppe l'animation en cours
+                animationActive = "";
+                afficherListeAnimations();
+                document.getElementById("badgeStatus").textContent = "Arrêtée : " + nomAnimation;
 
-            document.getElementById("badgeStatus").textContent = "Lecture : " + nomAnimation;
+                const msgStop = JSON.stringify({
+                    type: "STOP_ANIMATION",
+                    name: nomAnimation
+                });
+                window.parent.postMessage(msgStop, "*");
+            } else {
+                // 1er clic : on lance l'animation
+                animationActive = nomAnimation;
+                afficherListeAnimations();
+                document.getElementById("badgeStatus").textContent = "Lecture : " + nomAnimation;
 
-            const message3DX = JSON.stringify({
-                type: "PLAY_ANIMATION",
-                name: nomAnimation
-            });
-
-            window.parent.postMessage(message3DX, "*");
+                const msgPlay = JSON.stringify({
+                    type: "PLAY_ANIMATION",
+                    name: nomAnimation
+                });
+                window.parent.postMessage(msgPlay, "*");
+            }
         }
 
-        // Réception de la liste des animations envoyée par 3DEXPERIENCE
+        // Réception des messages envoyés par 3DEXPERIENCE
         window.addEventListener("message", (iEvent) => {
             let donneesBrutes = iEvent.data;
             if (!donneesBrutes) return;
@@ -301,15 +318,17 @@
                     listeAnimations = paquet.animations;
                     document.getElementById("badgeStatus").textContent = "Synchronisé avec la scène";
                     afficherListeAnimations();
-                } else if (Array.isArray(paquet)) {
-                    listeAnimations = paquet;
-                    document.getElementById("badgeStatus").textContent = "Synchronisé avec la scène";
+                } else if (paquet && paquet.type === "ANIMATION_STATE") {
+                    // Mise à jour automatique si l'animation s'est arrêtée ou finie dans 3DX
+                    animationActive = paquet.playing ? paquet.name : "";
+                    document.getElementById("badgeStatus").textContent = paquet.playing
+                        ? "Lecture : " + paquet.name
+                        : "Arrêtée : " + paquet.name;
                     afficherListeAnimations();
                 }
             } catch (e) {}
         });
 
-        // Notification d'initialisation officielle (getting started.pdf p. 32)
         window.onload = function () {
             window.parent.postMessage("ready", "*");
         };
