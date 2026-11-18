@@ -790,7 +790,7 @@
                     texte += `\n\n--- DONNÉES EXTRAITES DU COMMENTAIRE DE RÉVISION PLM ---\n• Pièce PLM : ${plmPiece.nomPiece}\n• Masse CAO : ${plmPiece.masse}\n• Volume CAO : ${plmPiece.volume}\n• Matériau CAO : ${plmPiece.materiau}`;
                 }
             } else if (cle === "materiau" && plmPiece) {
-                texte = `Matériau CAO extrait du PLM (ENOVIA) : ${plmPiece.materiau}\nMasse associée : ${plmPiece.masse} | Volume : ${plmPiece.volume}\n\n` + fichesGeneriques.criteres.materiau;
+                texte = `Matériau CAO extrait de 3DEXPERIENCE : ${plmPiece.materiau}\nMasse associée : ${plmPiece.masse} | Volume : ${plmPiece.volume}\n\n` + fichesGeneriques.criteres.materiau;
             } else {
                 texte = fichesGeneriques.criteres[cle];
             }
