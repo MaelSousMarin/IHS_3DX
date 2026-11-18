@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IHS Passeport Numérique - 3DEXPERIENCE</title>
+    <style>
+        :root {
+            /* Charte Graphique Dassault Systèmes (3DS) - Thème Clair Uni */
+            --ds-blue-dark: #002C4B;
+            --ds-blue-primary: #005386;
+            --ds-blue-light: #0076BA;
+            
+            /* Neutres & Fonds */
+            --bg-main: #F5F5F7;
+            --bg-card: #FFFFFF;
+            --bg-pill-bar: #E5E8ED;
+            --bg-input: #F0F2F5;
+            --text-main: #1D1D1F;
+            --text-muted: #6E6E73;
+
+            /* Couleurs fonctionnelles */
+            --success: #28894B;
+            --warning: #E67E22;
+            --danger: #D12F2F;
+
+            /* Ombres douces (sans aucune bordure) */
+            --shadow-soft: 0 4px 14px rgba(0, 0, 0, 0.04);
+            --shadow-hover: 0 10px 22px rgba(0, 44, 75, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: '3ds', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            padding: 16px;
+            overflow-x: hidden;
+        }
+
+        /* =========================================================
+           1. EN-TÊTE ÉPURÉ UNI (SANS BORDURE)
+           ========================================================= */
+        .header {
+            background: var(--bg-card);
+            padding: 18px 22px;
+            border-radius: 18px;
+            border: none;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            box-shadow: var(--shadow-soft);
+        }
+
+        .piece-title-box {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .ref-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .ref-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .ref-item strong {
+            color: var(--ds-blue-primary);
+            font-weight: 700;
+        }
+
+        .cad-value {
+            font-family: Consolas, monospace;
+            background: var(--bg-input);
+            padding: 3px 10px;
+            border-radius: 8px;
+            border: none;
+            font-size: 12px;
+            color: var(--text-main);
+        }
+
+        .csv-dot {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .piece-title-box h1 {
+            font-size: 22px;
+            color: var(--text-main);
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+
+        .status-badge {
+            padding: 8px 16px;
+            border-radius: 999px;
+            font-size: 12.5px;
+            font-weight: 700;
+            background: var(--bg-input);
+            color: var(--text-main);
+            border: none;
+        }
+
+        /* =========================================================
+           2. BARRE D'ONGLETS EN PILULE (STYLE CAPSULE SANS BORDURE)
+           ========================================================= */
+        .tabs-pill-container {
+            background: var(--bg-pill-bar);
+            padding: 5px;
+            border-radius: 999px;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 11px 20px;
+            background: transparent;
+            color: var(--text-main);
+            border: none;
+            outline: none;
+            border-radius: 999px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            text-align: center;
+            transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .tab-btn:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.6);
+            transform: scale(1.02);
+        }
+
+        .tab-btn.active {
+            background: var(--ds-blue-primary);
+            color: #FFFFFF;
+            box-shadow: 0 2px 8px rgba(0, 83, 134, 0.25);
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* =========================================================
+           3. INDICATEURS CLÉS UNIS (SANS BORDURE)
+           ========================================================= */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .metric-card {
+            background: var(--bg-card);
+            padding: 14px 12px;
+            border-radius: 14px;
+            border: none;
+            text-align: center;
+            box-shadow: var(--shadow-soft);
+        }
+
+        .metric-card .label {
+            font-size: 10.5px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.4px;
+        }
+
+        .metric-card .value {
+            font-size: 15.5px;
+            font-weight: 700;
+            margin-top: 5px;
+            color: var(--ds-blue-primary);
+        }
+
+        /* =========================================================
+           4. BOUTONS CRITÈRES COMPACTS (x0.75, SANS "+", TEXTE DS-BLUE-PRIMARY)
+           ========================================================= */
+        .criteria-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(125px, 1fr));
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .crit-btn {
+            background: var(--bg-card);
+            border: none;
+            outline: none;
+            padding: 12px 13px;
+            border-radius: 14px;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            box-shadow: var(--shadow-soft);
+            transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
+                        background-color 0.22s ease,
+                        box-shadow 0.22s ease,
+                        color 0.22s ease;
+        }
+
+        .crit-btn:hover {
+            transform: scale(1.045);
+            box-shadow: var(--shadow-hover);
+            z-index: 2;
+        }
+
+        .crit-btn.active {
+            background: var(--ds-blue-primary);
+            box-shadow: 0 6px 16px rgba(0, 83, 134, 0.28);
+        }
+
+        .crit-btn .crit-num {
+            font-size: 10px;
+            color: var(--text-muted);
+            font-weight: 600;
+            transition: color 0.2s ease;
+        }
+
+        .crit-btn .crit-name {
+            font-size: 12.5px;
+            font-weight: 700;
+            line-height: 1.25;
+            color: var(--ds-blue-primary);
+            transition: color 0.2s ease;
+        }
+
+        .crit-btn.active .crit-num {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .crit-btn.active .crit-name {
+            color: #FFFFFF;
+        }
+
+        /* =========================================================
+           5. ZONE DE DÉTAIL DU CRITÈRE (UNIE SANS BORDURE)
+           ========================================================= */
+        .detail-box {
+            background: var(--bg-card);
+            border: none;
+            border-radius: 18px;
+            padding: 20px 22px;
+            min-height: 110px;
+            box-shadow: var(--shadow-soft);
+        }
+
+        .detail-box h3 {
+            color: var(--ds-blue-primary);
+            font-size: 16px;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .detail-box p {
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-line;
+            color: var(--text-main);
+        }
+
+        /* =========================================================
+           6. ONGLET DIAGNOSTIC & ONGLET BLOC-NOTE (UNIS SANS BORDURE)
+           ========================================================= */
+        .diag-section {
+            background: var(--bg-card);
+            border: none;
+            border-radius: 18px;
+            padding: 18px 20px;
+            margin-bottom: 14px;
+            box-shadow: var(--shadow-soft);
+        }
+
+        .diag-section h3 {
+            color: var(--ds-blue-primary);
+            margin-bottom: 10px;
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .alert-box {
+            background: #FEE2E2;
+            border: none;
+            color: #991B1B;
+            padding: 14px 18px;
+            border-radius: 14px;
+            margin-bottom: 14px;
+            font-size: 13.5px;
+            font-weight: 600;
+        }
+
+        .steps-list {
+            padding-left: 20px;
+            line-height: 1.7;
+            font-size: 14px;
+        }
+
+        .state-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .state-btn {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            outline: none;
+            border-radius: 999px;
+            font-weight: 700;
+            cursor: pointer;
+            color: #FFFFFF;
+            font-size: 13px;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+
+        .state-btn:hover {
+            transform: scale(1.03);
+            opacity: 0.92;
+        }
+
+        .btn-ok { background: var(--success); }
+        .btn-warn { background: var(--warning); }
+        .btn-err { background: var(--danger); }
+
+        /* Bloc-note */
+        .note-form {
+            background: var(--bg-card);
+            padding: 18px 20px;
+            border-radius: 18px;
+            border: none;
+            margin-bottom: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            box-shadow: var(--shadow-soft);
+        }
+
+        .note-form input, .note-form select, .note-form textarea {
+            width: 100%;
+            padding: 11px 14px;
+            border-radius: 12px;
+            border: none;
+            background: var(--bg-input);
+            color: var(--text-main);
+            font-size: 13.5px;
+            outline: none;
+        }
+
+        .note-form input:focus, .note-form select:focus, .note-form textarea:focus {
+            background: #E8ECF2;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            background: var(--ds-blue-primary);
+            color: #FFFFFF;
+            border: none;
+            outline: none;
+            padding: 11px 20px;
+            border-radius: 999px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 13px;
+            transition: transform 0.2s ease, background-color 0.2s ease;
+        }
+
+        .action-btn:hover {
+            background: var(--ds-blue-light);
+            transform: scale(1.03);
+        }
+
+        .action-btn.secondary {
+            background: var(--bg-pill-bar);
+            color: var(--text-main);
+        }
+
+        .action-btn.secondary:hover {
+            background: #D5DAE2;
+        }
+
+        .notes-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .note-item {
+            background: var(--bg-card);
+            border: none;
+            padding: 14px 18px;
+            border-radius: 14px;
+            font-size: 13.5px;
+            box-shadow: var(--shadow-soft);
+        }
+
+        .note-item .note-meta {
+            font-size: 11.5px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .note-item .note-tag {
+            display: inline-block;
+            background: var(--ds-blue-primary);
+            color: #FFFFFF;
+            border: none;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- EN-TÊTE -->
+    <div class="header">
+        <div class="piece-title-box">
+            <div class="ref-row">
+                <span class="ref-item">Réf : <strong id="badgeRef">#----</strong></span>
+                <span class="ref-item">Acteur : <span class="cad-value" id="badgeCAO">--</span></span>
+                <span class="csv-dot" id="statutCSV">Chargement CSV...</span>
+            </div>
+            <h1 id="nomPiece">Chargement de la pièce...</h1>
+        </div>
+        <div id="badgeEtat" class="status-badge">État : Non contrôlé</div>
+    </div>
+
+    <!-- BARRE D'ONGLETS EN PILULE -->
+    <div class="tabs-pill-container">
+        <button class="tab-btn active" onclick="changerOnglet('infos', this)">Passeport</button>
+        <button class="tab-btn" onclick="changerOnglet('diagnostic', this)">Diagnostic</button>
+        <button class="tab-btn" onclick="changerOnglet('notes', this)">Bloc-note</button>
+    </div>
+
+    <!-- ONGLET 1 : PASSEPORT -->
+    <div id="tab-infos" class="tab-content active">
+        <div class="metrics-grid">
+            <div class="metric-card"><div class="label">N° Réf</div><div class="value" id="valRef">--</div></div>
+            <div class="metric-card"><div class="label">Masse Estimée</div><div class="value" id="valPoids">--</div></div>
+            <div class="metric-card"><div class="label">Matériau</div><div class="value" id="valMateriau">Standard</div></div>
+            <div class="metric-card"><div class="label">Indice</div><div class="value" id="valIndice">8.0 / 10</div></div>
+        </div>
+        <div class="criteria-grid" id="grilleCriteres"></div>
+        <div class="detail-box">
+            <h3 id="titreCritere">Sélectionnez un critère</h3>
+            <p id="texteCritere">--</p>
+        </div>
+    </div>
+
+    <!-- ONGLET 2 : DIAGNOSTIC -->
+    <div id="tab-diagnostic" class="tab-content">
+        <div class="alert-box" id="alerteSecurite">Consigne de sécurité : Vérifier la température et couper l'alimentation avant intervention.</div>
+        <div class="diag-section"><h3>Outillage requis</h3><p id="outilsRequis">Clé Allen 2.0 mm, Clé à douille 7 mm.</p></div>
+        <div class="diag-section"><h3>Gamme de démontage</h3><ol class="steps-list" id="listeEtapes"></ol></div>
+        <div class="diag-section">
+            <h3>Déclarer l'état</h3>
+            <div class="state-buttons">
+                <button class="state-btn btn-ok" onclick="definirEtat('Opérationnel', '#28894B')">Opérationnel</button>
+                <button class="state-btn btn-warn" onclick="definirEtat('Usé', '#E67E22')">Usé</button>
+                <button class="state-btn btn-err" onclick="definirEtat('À remplacer', '#D12F2F')">À remplacer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ONGLET 3 : BLOC-NOTE -->
+    <div id="tab-notes" class="tab-content">
+        <div class="note-form">
+            <input type="text" id="noteAuteur" placeholder="Nom de l'opérateur">
+            <select id="noteTag">
+                <option value="Observation">Observation</option>
+                <option value="Usure">Trace d'usure</option>
+                <option value="Commande SAV">Pièce à commander</option>
+            </select>
+            <textarea id="noteTexte" rows="3" placeholder="Votre observation..."></textarea>
+            <div class="btn-row">
+                <button class="action-btn" onclick="ajouterNote()">Enregistrer la note</button>
+                <button class="action-btn secondary" onclick="exporterWord()">Exporter Word (.doc)</button>
+                <button class="action-btn secondary" onclick="exporterExcel()">Exporter Excel (.xls)</button>
+            </div>
+        </div>
+        <div class="notes-list" id="listeNotes"></div>
+    </div>
+
+    <script>
+        /* =========================================================================
+           1. BASES DE DONNÉES DYNAMIQUES ISSUES DES CSV (MÉTHODE 2)
+           ========================================================================= */
+        let catalogueRef = {};
+        let materiauxParRef = {};   // Données issues de matériaux.csv (Ref, materiau, densite)
+        let volumesParPiece = {};   // Données issues de volumes_catia.csv (Piece;Volume)
+
+        const fichesGeneriques = {
+            etapes: [
+                "Isoler la zone d'intervention et couper l'alimentation électrique si nécessaire.",
+                "Dévisser les éléments de fixation en conservant la visserie dans le bac de tri.",
+                "Extraire délicatement la pièce et inspecter l'état des surfaces de contact."
+            ],
+            criteres: {
+                fonction: "Assurer la liaison mécanique, thermique ou fonctionnelle au sein du sous-ensemble de la machine.",
+                materiau: "Matériau standard conforme aux spécifications constructeur Ultimaker.",
+                fixation: "Assemblage standardisé par vis métriques ou emboîtement direct.",
+                fabrication: "Usinage ou injection plastique conforme au cahier des charges Ultimaker.",
+                environnement: "Recyclable selon la filière adaptée (métaux / polymères techniques).",
+                dangerosite: "Aucun danger particulier hors manipulation de pièces mécaniques.",
+                inflammabilite: "Faible ou auto-extinguible selon le matériau.",
+                fluides_elec: "Composant passif ou actif selon son intégration dans le module.",
+                mobilite: "Démontable lors de la maintenance préventive ou corrective.",
+                historique: "Référence issue du catalogue officiel des pièces détachées."
+            }
+        };
+
+        const libellesCriteres = [
+            { cle: "fonction", num: "01", titre: "Rôle fonctionnel" },
+            { cle: "materiau", num: "02", titre: "Matériau" },
+            { cle: "fixation", num: "03", titre: "Fixation" },
+            { cle: "fabrication", num: "04", titre: "Fabrication" },
+            { cle: "geometrie", num: "05", titre: "Géométrie & Réf" },
+            { cle: "environnement", num: "06", titre: "Environnement" },
+            { cle: "dangerosite", num: "07", titre: "Sécurité" },
+            { cle: "inflammabilite", num: "08", titre: "Inflammabilité" },
+            { cle: "fluides_elec", num: "09", titre: "Électricité / Fluides" },
+            { cle: "mobilite", num: "10", titre: "Mobilité" },
+            { cle: "historique", num: "11", titre: "Historique & Notes" }
+        ];
+
+        let codePieceActuel = "PRINTHEAD";
+        let nomCAORecu = "PRINTHEAD";
+        let critereActuel = "fonction";
+        
+        let etatsPieces = JSON.parse(localStorage.getItem("etats_buse_ihs")) || {};
+        let notesLocales = JSON.parse(localStorage.getItem("notes_buse_ihs")) || [];
+        const FIREBASE_URL = "https://ensamstagem1-default-rtdb.europe-west1.firebasedatabase.app/notes_buse.json";
+
+        /* =========================================================================
+           2. UTILITAIRES DE CONVERSION ET FUSION (VOLUMES CATIA + MATÉRIAUX)
+           ========================================================================= */
+        // Convertit une chaîne de volume CATIA (ex: "2,513e-005m3", "12,4cm3", "850mm3") en m³
+        function convertirVolumeEnM3(valBrute) {
+            if (!valBrute) return null;
+            let propre = valBrute.toString().trim().toLowerCase().replace(",", ".");
+            
+            let facteur = 1; // Par défaut m³
+            if (propre.includes("mm3")) {
+                facteur = 1e-9;
+            } else if (propre.includes("cm3")) {
+                facteur = 1e-6;
+            } else if (propre.includes("dm3") || propre.includes("l")) {
+                facteur = 1e-3;
+            } else if (propre.includes("m3")) {
+                facteur = 1;
+            }
+
+            // Extrait la partie numérique (y compris notation scientifique e-005)
+            const matchNum = propre.match(/[-+]?\d*\.?\d+(?:e[-+]?\d+)?/);
+            if (!matchNum) return null;
+
+            const valeur = parseFloat(matchNum[0]);
+            return isNaN(valeur) ? null : valeur * facteur;
+        }
+
+        // Formate la masse en g (ou kg si >= 1000 g)
+        function formaterMasse(masseKg) {
+            if (masseKg === null || isNaN(masseKg) || masseKg <= 0) return null;
+            const masseG = masseKg * 1000;
+            if (masseG >= 1000) {
+                return masseKg.toFixed(2).replace(".", ",") + " kg";
+            } else if (masseG >= 10) {
+                return masseG.toFixed(1).replace(".", ",") + " g";
+            } else {
+                return masseG.toFixed(2).replace(".", ",") + " g";
+            }
+        }
+
+        // Essaie plusieurs noms de fichiers (ex: avec ou sans accent)
+        async function fetchPremierCSVDisponible(nomsFichiers) {
+            const ts = new Date().getTime();
+            for (const nom of nomsFichiers) {
+                try {
+                    const rep = await fetch(`${nom}?t=${ts}`);
+                    if (rep.ok) return await rep.text();
+                } catch (e) {}
+            }
+            return null;
+        }
+
+        // Extrait le numéro à 4 chiffres d'un nom CATIA ou renvoie l'identifiant
+        function extraireRefDepuisNomCATIA(nomBrut) {
+            if (!nomBrut) return "PRINTHEAD";
+            const texte = nomBrut.trim();
+            const match4 = texte.match(/(?:_|^|\b)(\d{4})(?:-|_|\b)/);
+            if (match4) {
+                if (catalogueRef[match4[1]] || materiauxParRef[match4[1]] || volumesParPiece[match4[1]]) {
+                    return match4[1];
+                }
+            }
+            if (catalogueRef[texte]) return texte;
+            return "PRINTHEAD";
+        }
+
+        // Calcule et fusionne les données (Volume + Matériau + Densité -> Masse) pour une pièce donnée
+        function calculerDonneesPhysiques(codeRef, nomActeur) {
+            const nomActeurClean = (nomActeur || "").trim();
+
+            // 1. Recherche du Matériau & Densité (par codeRef 4 chiffres ou par nom d'acteur)
+            const matInfo = materiauxParRef[codeRef] || materiauxParRef[nomActeurClean] || null;
+            const materiau = matInfo ? matInfo.materiau : "Standard";
+            const densite = matInfo ? matInfo.densite : null; // en kg/m³
+
+            // 2. Recherche du Volume CATIA (par nom d'acteur exact ou par codeRef 4 chiffres)
+            const volInfo = volumesParPiece[nomActeurClean] || volumesParPiece[codeRef] || null;
+            const volumeBrut = volInfo ? volInfo.volumeBrut : null;
+            const volumeM3 = volInfo ? volInfo.volumeM3 : null;
+
+            // 3. Calcul de la Masse : Masse (kg) = Volume (m³) * Densité (kg/m³)
+            let masseFormatee = "Calcul CAO";
+            let masseKg = null;
+
+            if (volumeM3 !== null && densite !== null) {
+                masseKg = volumeM3 * densite;
+                masseFormatee = formaterMasse(masseKg) || "Calcul CAO";
+            } else if (volumeBrut) {
+                // Si on a le volume mais pas encore la densité
+                masseFormatee = `Vol: ${volumeBrut}`;
+            }
+
+            return {
+                materiau: materiau,
+                densite: densite,
+                volumeBrut: volumeBrut,
+                volumeM3: volumeM3,
+                masseKg: masseKg,
+                poids: masseFormatee
+            };
+        }
+
+        /* =========================================================================
+           3. CHARGEMENT ET FUSION DES TABLEAUX CSV AU DÉMARRAGE
+           ========================================================================= */
+        async function chargerTousLesCSV() {
+            const badgeCSV = document.getElementById("statutCSV");
+            let nbCat = 0, nbMat = 0, nbVol = 0;
+
+            try {
+                // --- A. Lecture du Catalogue (catalogue_ultimaker.csv) ---
+                const texteCat = await fetchPremierCSVDisponible(["catalogue_ultimaker.csv"]);
+                if (texteCat) {
+                    const lignes = texteCat.split(/\r?\n/);
+                    for (let i = 1; i < lignes.length; i++) {
+                        if (!lignes[i].trim()) continue;
+                        const col = lignes[i].split(/[;,]/);
+                        if (col.length >= 2) {
+                            const ref = col[0].trim();
+                            const nom = col[1].trim();
+                            catalogueRef[ref] = {
+                                ref: ref === "PRINTHEAD" ? "PRINTHEAD" : "#" + ref,
+                                nomOfficiel: nom
+                            };
+                            nbCat++;
+                        }
+                    }
+                }
+
+                // --- B. Lecture du CSV Matériaux & Densités (matériaux.csv / materiaux.csv) ---
+                const texteMat = await fetchPremierCSVDisponible([
+                    "matériaux.csv",
+                    "materiaux.csv",
+                    "materiaux_constructeur.csv"
+                ]);
+                if (texteMat) {
+                    const lignesMat = texteMat.split(/\r?\n/);
+                    for (let i = 1; i < lignesMat.length; i++) {
+                        if (!lignesMat[i].trim()) continue;
+                        // Supporte le séparateur virgule (,) ou point-virgule (;)
+                        const col = lignesMat[i].split(/[;,]/);
+                        if (col.length >= 3) {
+                            const ref = col[0].trim();
+                            const nomMat = col[1].trim();
+                            const densiteVal = parseFloat(col[2].trim().replace(",", "."));
+
+                            materiauxParRef[ref] = {
+                                materiau: nomMat,
+                                densite: isNaN(densiteVal) ? null : densiteVal
+                            };
+                            nbMat++;
+
+                            // Si la pièce n'était pas dans catalogueRef, on crée une entrée de secours
+                            if (!catalogueRef[ref]) {
+                                catalogueRef[ref] = {
+                                    ref: ref.match(/^\d+$/) ? "#" + ref : ref,
+                                    nomOfficiel: "Pièce " + ref
+                                };
+                            }
+                        }
+                    }
+                }
+
+                // --- C. Lecture du CSV des Volumes CATIA (volumes_catia.csv) ---
+                const texteVol = await fetchPremierCSVDisponible([
+                    "volumes_catia.csv",
+                    "volumes.csv",
+                    "bom_catia.csv"
+                ]);
+                if (texteVol) {
+                    const lignesVol = texteVol.split(/\r?\n/);
+                    for (let i = 1; i < lignesVol.length; i++) {
+                        if (!lignesVol[i].trim()) continue;
+                        // Attention: le volume contient une virgule décimale (ex: 2,513e-005m3), on coupe d'abord sur ';'
+                        const col = lignesVol[i].includes(";") ? lignesVol[i].split(";") : lignesVol[i].split(",");
+                        if (col.length >= 2) {
+                            const pieceNom = col[0].trim();
+                            const volStr = col[1].trim();
+                            const volM3 = convertirVolumeEnM3(volStr);
+
+                            const objVol = { volumeBrut: volStr, volumeM3: volM3 };
+                            volumesParPiece[pieceNom] = objVol;
+
+                            // On indexe aussi par le numéro à 4 chiffres si le nom CATIA en contient un (ex: CS_1748-D -> 1748)
+                            const match4 = pieceNom.match(/(?:_|^|\b)(\d{4})(?:-|_|\b)/);
+                            if (match4) {
+                                volumesParPiece[match4[1]] = objVol;
+                            }
+                            nbVol++;
+
+                            // Permet aussi de tester directement des pièces comme m2_piece1
+                            if (!catalogueRef[pieceNom] && (!match4 || !catalogueRef[match4[1]])) {
+                                catalogueRef[pieceNom] = {
+                                    ref: pieceNom,
+                                    nomOfficiel: "Pièce CAO " + pieceNom
+                                };
+                            }
+                        }
+                    }
+                }
+
+                // Assure une entrée par défaut PRINTHEAD si aucun CSV n'est trouvé
+                if (!catalogueRef["PRINTHEAD"]) {
+                    catalogueRef["PRINTHEAD"] = {
+                        ref: "PRINTHEAD",
+                        nomOfficiel: "Print Head Assembly"
+                    };
+                }
+
+                badgeCSV.textContent = `${nbCat} réf | ${nbMat} mat | ${nbVol} vol`;
+                recevoirMessage3DX("PRINTHEAD");
+            } catch (e) {
+                badgeCSV.textContent = "Erreur CSV";
+                badgeCSV.style.color = "#D12F2F";
+            }
+        }
+
+        /* =========================================================================
+           4. AFFICHAGE & MISE À JOUR DE L'INTERFACE
+           ========================================================================= */
+        function changerOnglet(idOnglet, boutonClique) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + idOnglet).classList.add('active');
+            boutonClique.classList.add('active');
+        }
+
+        function recevoirMessage3DX(messageBrut) {
+            nomCAORecu = messageBrut;
+            const codeExtrait = extraireRefDepuisNomCATIA(messageBrut);
+            chargerPieceParCode(codeExtrait);
+        }
+
+        function chargerPieceParCode(code) {
+            if (!catalogueRef[code]) code = "PRINTHEAD";
+            if (!catalogueRef[code]) return;
+
+            codePieceActuel = code;
+            const info = catalogueRef[code];
+            const phys = calculerDonneesPhysiques(code, nomCAORecu);
+
+            // Mise à jour de l'en-tête
+            document.getElementById("badgeRef").textContent = info.ref;
+            document.getElementById("badgeCAO").textContent = nomCAORecu;
+            document.getElementById("nomPiece").textContent = info.nomOfficiel;
+
+            // Mise à jour des cartes de métriques avec la Masse calculée et le Matériau fusionné
+            document.getElementById("valRef").textContent = info.ref;
+            document.getElementById("valPoids").textContent = phys.poids;
+            document.getElementById("valMateriau").textContent = phys.materiau;
+
+            const badge = document.getElementById("badgeEtat");
+            if (etatsPieces[code]) {
+                badge.textContent = "État : " + etatsPieces[code].texte;
+                badge.style.background = etatsPieces[code].couleur;
+                badge.style.color = "#FFFFFF";
+            } else {
+                badge.textContent = "État : Non contrôlé";
+                badge.style.background = "#F0F2F5";
+                badge.style.color = "#1D1D1F";
+            }
+
+            const listeEtapes = document.getElementById("listeEtapes");
+            listeEtapes.innerHTML = "";
+            fichesGeneriques.etapes.forEach(e => {
+                const li = document.createElement("li");
+                li.textContent = e;
+                listeEtapes.appendChild(li);
+            });
+
+            genererGrilleCriteres();
+            afficherDetailCritere(critereActuel);
+            afficherNotes();
+        }
+
+        function genererGrilleCriteres() {
+            const grille = document.getElementById("grilleCriteres");
+            grille.innerHTML = "";
+            libellesCriteres.forEach(item => {
+                const btn = document.createElement("button");
+                btn.className = "crit-btn" + (item.cle === critereActuel ? " active" : "");
+                btn.innerHTML = `
+                    <span class="crit-num">Critère ${item.num}</span>
+                    <span class="crit-name">${item.titre}</span>
+                `;
+                btn.onclick = () => afficherDetailCritere(item.cle);
+                grille.appendChild(btn);
+            });
+        }
+
+        function afficherDetailCritere(cle) {
+            critereActuel = cle;
+            genererGrilleCriteres();
+            const info = catalogueRef[codePieceActuel];
+            if (!info) return;
+            const infoCritere = libellesCriteres.find(c => c.cle === cle);
+            const phys = calculerDonneesPhysiques(codePieceActuel, nomCAORecu);
+
+            document.getElementById("titreCritere").textContent = `${infoCritere.num}. ${infoCritere.titre} — [${info.ref}]`;
+            
+            let texte = "";
+            if (cle === "materiau") {
+                texte = `Matériau attribué : ${phys.materiau}\n` +
+                        `Densité : ${phys.densite ? phys.densite + " kg/m³" : "Non renseignée dans matériaux.csv"}`;
+            } else if (cle === "geometrie") {
+                texte = `Référence catalogue : ${info.ref}\n` +
+                        `Nom officiel : ${info.nomOfficiel}\n` +
+                        `Instance CATIA détectée : ${nomCAORecu}\n` +
+                        `Volume géométrique CATIA : ${phys.volumeBrut || "Non mesuré"}\n` +
+                        `Densité matériau : ${phys.densite ? phys.densite + " kg/m³" : "--"}\n` +
+                        `Masse calculée (Volume × Densité) : ${phys.poids}`;
+            } else {
+                texte = fichesGeneriques.criteres[cle];
+            }
+
+            if (cle === "historique") {
+                const notesDeLaPiece = notesLocales.filter(n => n.code === codePieceActuel);
+                if (notesDeLaPiece.length > 0) {
+                    texte += "\n\nNOTES OPÉRATEURS : " + notesDeLaPiece.map(n => `[${n.tag}] ${n.texte} (${n.auteur})`).join(" | ");
+                }
+            }
+            document.getElementById("texteCritere").textContent = texte;
+        }
+
+        function definirEtat(texteEtat, couleurHex) {
+            etatsPieces[codePieceActuel] = { texte: texteEtat, couleur: couleurHex };
+            localStorage.setItem("etats_buse_ihs", JSON.stringify(etatsPieces));
+            chargerPieceParCode(codePieceActuel);
+        }
+
+        function ajouterNote() {
+            const auteur = document.getElementById("noteAuteur").value.trim() || "Opérateur";
+            const tag = document.getElementById("noteTag").value;
+            const texte = document.getElementById("noteTexte").value.trim();
+            if (!texte || !catalogueRef[codePieceActuel]) return;
+
+            const info = catalogueRef[codePieceActuel];
+            const nouvelleNote = {
+                code: codePieceActuel,
+                nomPiece: `${info.ref} - ${info.nomOfficiel}`,
+                auteur: auteur,
+                tag: tag,
+                texte: texte,
+                date: new Date().toLocaleString("fr-FR")
+            };
+
+            notesLocales.unshift(nouvelleNote);
+            localStorage.setItem("notes_buse_ihs", JSON.stringify(notesLocales));
+            fetch(FIREBASE_URL, { method: "POST", body: JSON.stringify(nouvelleNote) }).catch(() => {});
+
+            document.getElementById("noteTexte").value = "";
+            afficherNotes();
+            if (critereActuel === "historique") afficherDetailCritere("historique");
+        }
+
+        function afficherNotes() {
+            const conteneur = document.getElementById("listeNotes");
+            conteneur.innerHTML = "";
+            if (notesLocales.length === 0) {
+                conteneur.innerHTML = "<p style='color:#6E6E73; font-size:12.5px;'>Aucune note enregistrée.</p>";
+                return;
+            }
+            notesLocales.forEach(n => {
+                const div = document.createElement("div");
+                div.className = "note-item";
+                div.innerHTML = `
+                    <div class="note-meta">${n.date} — <strong>${n.auteur}</strong> sur <strong>${n.nomPiece}</strong></div>
+                    <div><span class="note-tag">${n.tag}</span>${n.texte}</div>
+                `;
+                conteneur.appendChild(div);
+            });
+        }
+
+        /* =========================================================================
+           5. EXPORTS WORD & EXCEL ENRICHIS (AVEC MATÉRIAU ET MASSE CALCULÉE)
+           ========================================================================= */
+        function obtenirPiecesAnalysees() {
+            const codes = new Set([
+                ...Object.keys(etatsPieces),
+                ...notesLocales.map(n => n.code)
+            ]);
+            return Array.from(codes);
+        }
+
+        function exporterWord() {
+            const codesAnalyses = obtenirPiecesAnalysees();
+            if (codesAnalyses.length === 0) {
+                alert("Aucune pièce analysée ou note enregistrée à exporter.");
+                return;
+            }
+
+            const dateJour = new Date().toLocaleString("fr-FR");
+            let html = `
+            <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+            <head>
+                <meta charset='utf-8'>
+                <style>
+                    body { font-family: Arial, sans-serif; color: #1D1D1F; }
+                    h1 { color: #005386; border-bottom: 2px solid #005386; padding-bottom: 6px; }
+                    h2 { color: #002C4B; margin-top: 24px; font-size: 16px; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+                    th { background-color: #005386; color: #FFFFFF; padding: 8px; text-align: left; border: 1px solid #CCCCCC; }
+                    td { padding: 8px; border: 1px solid #CCCCCC; vertical-align: top; font-size: 13px; }
+                </style>
+            </head>
+            <body>
+                <h1>Rapport d'Expertise & Maintenance — 3DEXPERIENCE</h1>
+                <p><strong>Date d'édition :</strong> ${dateJour}</p>
+
+                <h2>Synthèse des pièces analysées et observations</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width:12%;">Référence</th>
+                            <th style="width:22%;">Désignation</th>
+                            <th style="width:18%;">Matériau & Masse</th>
+                            <th style="width:13%;">État déclaré</th>
+                            <th style="width:35%;">Notes & Observations</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+
+            codesAnalyses.forEach(code => {
+                const info = catalogueRef[code] || { ref: code, nomOfficiel: "Pièce hors catalogue" };
+                const phys = calculerDonneesPhysiques(code, code);
+                const etat = etatsPieces[code] ? etatsPieces[code].texte : "Non contrôlé";
+                const notesPiece = notesLocales.filter(n => n.code === code);
+
+                let htmlNotes = "<em>Aucune note</em>";
+                if (notesPiece.length > 0) {
+                    htmlNotes = notesPiece.map(n => 
+                        `<div><strong>[${n.tag}]</strong> ${n.texte} <br><small style="color:#6E6E73;">(${n.auteur} - ${n.date})</small></div>`
+                    ).join("<hr style='border:0; border-top:1px solid #EEE; margin:4px 0;'>");
+                }
+
+                html += `
+                        <tr>
+                            <td><strong>${info.ref}</strong></td>
+                            <td>${info.nomOfficiel}</td>
+                            <td>${phys.materiau}<br><small>Masse : ${phys.poids}</small></td>
+                            <td><strong>${etat}</strong></td>
+                            <td>${htmlNotes}</td>
+                        </tr>`;
+            });
+
+            html += `
+                    </tbody>
+                </table>
+            </body>
+            </html>`;
+
+            const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
+            const lien = document.createElement('a');
+            lien.href = URL.createObjectURL(blob);
+            lien.download = 'Rapport_Expertise_3DX.doc';
+            lien.click();
+        }
+
+        function exporterExcel() {
+            const codesAnalyses = obtenirPiecesAnalysees();
+            if (codesAnalyses.length === 0) {
+                alert("Aucune donnée à exporter vers Excel.");
+                return;
+            }
+
+            let htmlExcel = `
+            <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+            <head>
+                <meta charset="utf-8">
+                <style>
+                    table { border-collapse: collapse; font-family: Arial, sans-serif; }
+                    th { background-color: #005386; color: #FFFFFF; font-weight: bold; border: 1px solid #000000; padding: 6px; }
+                    td { border: 1px solid #CCCCCC; padding: 6px; vertical-align: top; }
+                </style>
+            </head>
+            <body>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Référence</th>
+                            <th>Nom Officiel</th>
+                            <th>Matériau</th>
+                            <th>Masse Calculée</th>
+                            <th>État de la pièce</th>
+                            <th>Catégorie Note</th>
+                            <th>Auteur</th>
+                            <th>Date</th>
+                            <th>Commentaire / Observation</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+
+            codesAnalyses.forEach(code => {
+                const info = catalogueRef[code] || { ref: code, nomOfficiel: "Pièce inconnue" };
+                const phys = calculerDonneesPhysiques(code, code);
+                const etat = etatsPieces[code] ? etatsPieces[code].texte : "Non contrôlé";
+                const notesPiece = notesLocales.filter(n => n.code === code);
+
+                if (notesPiece.length === 0) {
+                    htmlExcel += `
+                        <tr>
+                            <td>${info.ref}</td>
+                            <td>${info.nomOfficiel}</td>
+                            <td>${phys.materiau}</td>
+                            <td>${phys.poids}</td>
+                            <td>${etat}</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>Aucune observation saisie</td>
+                        </tr>`;
+                } else {
+                    notesPiece.forEach(n => {
+                        htmlExcel += `
+                        <tr>
+                            <td>${info.ref}</td>
+                            <td>${info.nomOfficiel}</td>
+                            <td>${phys.materiau}</td>
+                            <td>${phys.poids}</td>
+                            <td>${etat}</td>
+                            <td>${n.tag}</td>
+                            <td>${n.auteur}</td>
+                            <td>${n.date}</td>
+                            <td>${n.texte}</td>
+                        </tr>`;
+                    });
+                }
+            });
+
+            htmlExcel += `
+                    </tbody>
+                </table>
+            </body>
+            </html>`;
+
+            const blob = new Blob(['\ufeff', htmlExcel], { type: 'application/vnd.ms-excel' });
+            const lien = document.createElement('a');
+            lien.href = URL.createObjectURL(blob);
+            lien.download = 'Suivi_Maintenance_3DX.xls';
+            lien.click();
+        }
+
+        window.addEventListener("message", function (event) {
+            if (!event.data) return;
+            let msg = typeof event.data === 'string' ? event.data.trim().replace(/^['"]|['"]$/g, '') : "";
+            if (msg) recevoirMessage3DX(msg);
+        });
+
+        chargerTousLesCSV();
+    </script>
+</body>
+</html>
