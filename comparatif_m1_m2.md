@@ -1,6 +1,6 @@
 # Comparatif expérimental : Méthode 1 (100 % PLM) vs Méthode 2 (Passerelle CSV)
 
-Ce document synthétise l'évaluation comparative des deux architectures développées et validées sur le cas d'étude **tête d'impression Ultimaker 2+ (26 pièces uniques)** au sein de **CATIA / Creative Experience (3DEXPERIENCE)** pour alimenter dynamiquement le Passeport Numérique (`index.html`).
+Ce document synthétise l'évaluation comparative des deux architectures développées et validées sur le cas d'étude **tête d'impression Ultimaker 2+ (26 pièces uniques)** au sein de **CATIA / Creative Experience (3DEXPERIENCE)** pour alimenter dynamiquement le Passeport Numérique (`methode1.html`/`methode1.html`).
 
 ---
 
@@ -29,7 +29,7 @@ Ce document synthétise l'évaluation comparative des deux architectures dévelo
 | :--- | :--- | :--- |
 | **Nature du flux de données** | Attributs 3DEXPERIENCE détournés (`V_versionComment` / `V_description`) | Tableaux de données structurées externes (`.csv`) découplées de la scène 3D |
 | **Prérequis CAO dans CATIA** | **Élevés :** Application des matériaux dans CATIA | **Minimaux :** Fonctionne sur des géométries 3D nues (imports STEP sans matériau ni inertie) |
-| **Automatisation CATIA** | Macro VBScript complexe (`MATPLMService`, `InertiaService`, compression du texte | Macro VBScript légère (uniquement extraction des volumes via `smartVolume`) |
+| **Automatisation CATIA** | Macro VBScript complexe (`MATPLMService`, `InertiaService`, compression du texte) | Macro VBScript légère (uniquement extraction des volumes via `smartVolume`) |
 | **Passage à l'échelle** | **Bloqué (~8 pièces max) :** Plafond strict de **255 caractères** par champ texte dans 3DEXPERIENCE | **Illimité :** Pas de limite technique de pièces |
 | **Logique dans Creative Experience** | 2 scripts `beScript` (1 script de clic + 1 script d'extraction des données sur l'assemblage) | 1 seul script `beScript` générique (envoi du nom de l'acteur cliqué) |
 | **Maintenabilité / Mise à jour** | **Lourde :** Relancer la macro, sauvegarder dans 3DEXPERIENCE et recharger la scène Creative Experience | **Variable :** Modifier une valeur dans un tableau ou relancer la macro |
@@ -44,8 +44,8 @@ Les tests réalisés sur l'assemblage réel de la tête d'impression de l'imprim
 1. **Saturation expérimentale de la Méthode 1 :**
    * **Format standard lisible :** 26 pièces génèrent **2 948 caractères** (11,5× la limite 3DEXPERIENCE) $\rightarrow$ Rejet par l'API.
    * **Format compressé :** 26 pièces génèrent **721 caractères** (2,8× la limite) $\rightarrow$ Rejet par l'API (`Err -2147024809`).
-   * **Limite de caractères :** On ne peux pas transmettre plus de 255 caractères par assemblage.
-   * **Contournement :** Pour tout de même réussir à transmettre les données, seulement les matériaux de 4 pièces ont été paramétrés. Cette réussite confirme que la Méthode 1 ne peut être validée pour un assemblage de beaucoup de pièces.
+   * **Limite de caractères :** On ne peut pas transmettre plus de 255 caractères par assemblage.
+   * **Contournement :** Pour tout de même réussir à transmettre les données, les matériaux d'uniquement 4 pièces ont été paramétrés. Cette réussite confirme que la Méthode 1 ne peut être validée pour un assemblage comportant un grand nombre de pièces.
 
 2. **Validation complète de la Méthode 2 :**
    * Les **26 pièces uniques** ont toutes vu leur volume extrait automatiquement dans `volumes_catia.csv` en une seule exécution, sans appliquer de matériau dans CATIA ni toucher à 3DEXPERIENCE.
