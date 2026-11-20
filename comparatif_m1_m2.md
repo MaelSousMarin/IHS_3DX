@@ -1,6 +1,6 @@
 # Comparatif expérimental : Méthode 1 (100 % PLM) vs Méthode 2 (Passerelle CSV)
 
-Ce document synthétise l'évaluation comparative des deux architectures développées et validées sur le cas d'étude **tête d'impression Ultimaker 2+ (26 pièces uniques)** au sein de **CATIA / Creative Experience (3DEXPERIENCE)** pour alimenter dynamiquement le Passeport Numérique (`methode1.html`/`methode1.html`).
+Ce document synthétise l'évaluation comparative des deux architectures développées et validées sur le cas d'étude **tête d'impression Ultimaker 2+ (26 pièces uniques)** au sein de **CATIA / Creative Experience (3DEXPERIENCE)** pour alimenter dynamiquement le Passeport Numérique (`methode1.html`/`methode2.html`).
 
 ---
 
