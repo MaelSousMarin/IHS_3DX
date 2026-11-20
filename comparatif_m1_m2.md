@@ -25,16 +25,15 @@ Ce document synthétise l'évaluation comparative des deux architectures dévelo
 
 ## 2. Tableau comparatif multicritères
 
-| Critère d'évaluation | Méthode 1 : 100 % PLM (Produit Père) | Méthode 2 : Passerelle CSV + Calcul Web |
+| Critère d'évaluation | Méthode 1 : 100 % PLM | Méthode 2 : Passerelle CSV + Calcul Web |
 | :--- | :--- | :--- |
-| **Nature du flux de données** | Attributs administratifs 3DEXPERIENCE détournés (`V_versionComment` / `V_description`) | Tables de données structurées externes (`.csv`) découplées de la scène 3D |
-| **Prérequis CAO dans CATIA** | **Élevés :** Application obligatoire des matériaux dans CATIA + droits d'écriture 3DEXPERIENCE + sauvegarde (`Ctrl+S`) | **Minimaux :** Fonctionne directement sur des géométries 3D nues (imports STEP sans matériau ni inertie) |
-| **Automatisation CATIA** | Macro VBScript complexe (`MATPLMService`, `InertiaService`, compression, gestion des erreurs PLM) | Macro VBScript légère (uniquement extraction des volumes géométriques via `smartVolume`) |
-| **Passage à l'échelle (Scalabilité)** | **Bloqué (~8 pièces max) :** Plafond strict de **255 / 256 caractères** par champ texte dans 3DEXPERIENCE | **Illimité :** Supporte des centaines ou milliers de pièces sans perte ni troncature |
-| **Compatibilité d'exécution** | **Limitée :** `getPLMMetadata()` dépend de la session **Creative Experience Web** et du rafraîchissement du cache 3DEXPERIENCE | **Universelle :** Fonctionne sur Client lourd (VM/PC), Web et casque VR sans dépendance à l'API 3DEXPERIENCE |
-| **Logique dans Creative Experience** | 2 scripts `beScript` (1 script de clic + 1 script d'extraction/décompression PLM sur l'assemblage) | 1 seul script `beScript` générique (envoi du nom de l'acteur cliqué uniquement) |
-| **Maintenabilité / Mise à jour** | **Lourde :** Relancer la macro, sauvegarder dans 3DEXPERIENCE (`Ctrl+S`) et recharger la scène Creative Experience | **Instantanée :** Modifier une densité dans `materiaux.csv` ou remplacer `volumes_catia.csv` sur le dépôt |
-| **Propreté architecturale PLM** | **Faible :** Détournement d'un champ de gestion de révision pour stocker des grandeurs physiques | **Élevée :** Séparation propre entre maquette 3D temps réel et base de données métier (*Data-Driven*) |
+| **Nature du flux de données** | Attributs 3DEXPERIENCE détournés (`V_versionComment` / `V_description`) | Tableaux de données structurées externes (`.csv`) découplées de la scène 3D |
+| **Prérequis CAO dans CATIA** | **Élevés :** Application des matériaux dans CATIA | **Minimaux :** Fonctionne sur des géométries 3D nues (imports STEP sans matériau ni inertie) |
+| **Automatisation CATIA** | Macro VBScript complexe (`MATPLMService`, `InertiaService`, compression du texte | Macro VBScript légère (uniquement extraction des volumes via `smartVolume`) |
+| **Passage à l'échelle** | **Bloqué (~8 pièces max) :** Plafond strict de **256 caractères** par champ texte dans 3DEXPERIENCE | **Illimité :** Pas de limite technique de pièces |
+| **Logique dans Creative Experience** | 2 scripts `beScript` (1 script de clic + 1 script d'extraction des données sur l'assemblage) | 1 seul script `beScript` générique (envoi du nom de l'acteur cliqué) |
+| **Maintenabilité / Mise à jour** | **Lourde :** Relancer la macro, sauvegarder dans 3DEXPERIENCE et recharger la scène Creative Experience | **Variable :** Modifier une valeur dans un tableau ou relancer la macro |
+| **Propreté architecturale** | **Faible :** Détournement d'un champ de gestion de révision pour stocker des grandeurs physiques | **Élevée :** Séparation propre entre maquette 3D temps réel et base de données externe |
 
 ---
 
