@@ -30,29 +30,30 @@ Ce document synthétise l'évaluation comparative des deux architectures dévelo
 | **Nature du flux de données** | Attributs 3DEXPERIENCE détournés (`V_versionComment` / `V_description`) | Tableaux de données structurées externes (`.csv`) découplées de la scène 3D |
 | **Prérequis CAO dans CATIA** | **Élevés :** Application des matériaux dans CATIA | **Minimaux :** Fonctionne sur des géométries 3D nues (imports STEP sans matériau ni inertie) |
 | **Automatisation CATIA** | Macro VBScript complexe (`MATPLMService`, `InertiaService`, compression du texte | Macro VBScript légère (uniquement extraction des volumes via `smartVolume`) |
-| **Passage à l'échelle** | **Bloqué (~8 pièces max) :** Plafond strict de **256 caractères** par champ texte dans 3DEXPERIENCE | **Illimité :** Pas de limite technique de pièces |
+| **Passage à l'échelle** | **Bloqué (~8 pièces max) :** Plafond strict de **255 caractères** par champ texte dans 3DEXPERIENCE | **Illimité :** Pas de limite technique de pièces |
 | **Logique dans Creative Experience** | 2 scripts `beScript` (1 script de clic + 1 script d'extraction des données sur l'assemblage) | 1 seul script `beScript` générique (envoi du nom de l'acteur cliqué) |
 | **Maintenabilité / Mise à jour** | **Lourde :** Relancer la macro, sauvegarder dans 3DEXPERIENCE et recharger la scène Creative Experience | **Variable :** Modifier une valeur dans un tableau ou relancer la macro |
 | **Propreté architecturale** | **Faible :** Détournement d'un champ de gestion de révision pour stocker des grandeurs physiques | **Élevée :** Séparation propre entre maquette 3D temps réel et base de données externe |
 
 ---
 
-## 3. Preuves expérimentales sur l'Ultimaker 2+ (26 pièces uniques)
+## 3. Preuves expérimentales sur l'Ultimaker 2+
 
-Les tests réalisés sur l'assemblage réel `mael_Original ultimakerCS_SE14_buse` (26 pièces uniques issues d'un import STEP) mettent en évidence un écart net de comportement :
+Les tests réalisés sur l'assemblage réel de la tête d'impression de l'imprimante Ultimaker 2+ (`mael_Original ultimakerCS_SE14_buse`) mettent en évidence un écart net de comportement :
 
 1. **Saturation expérimentale de la Méthode 1 :**
-   * **Format standard lisible (v8) :** 26 pièces génèrent **2 948 caractères** (11,5× la limite 3DEXPERIENCE) $\rightarrow$ Rejet par l'API (`Err -2147024809`).
-   * **Format compressé (v9) :** 26 pièces génèrent **721 caractères** (2,8× la limite) $\rightarrow$ Rejet par l'API (`Err -2147024809`). Le test manuel par copier-coller confirme une troncature nette à **256 caractères** (en plein milieu de la 9e pièce).
-   * **Contournement par filtrage matériau (v8c) :** En ne conservant que les **4 pièces** munies du matériau `PA6-GF30`, la chaîne descend sous les 255 caractères et la pipeline complète fonctionne de bout en bout. Toutefois, cette réussite confirme que la Méthode 1 ne peut couvrir qu'un sous-ensemble très restreint de pièces.
+   * **Format standard lisible :** 26 pièces génèrent **2 948 caractères** (11,5× la limite 3DEXPERIENCE) $\rightarrow$ Rejet par l'API.
+   * **Format compressé :** 26 pièces génèrent **721 caractères** (2,8× la limite) $\rightarrow$ Rejet par l'API (`Err -2147024809`).
+   * **Limite de caractères :** On ne peux pas transmettre plus de 255 caractères par assemblage.
+   * **Contournement :** Pour tout de même réussir à transmettre les données, seulement les matériaux de 4 pièces ont été paramétrés. Cette réussite confirme que la Méthode 1 ne peut être validée pour un assemblage de beaucoup de pièces.
 
 2. **Validation complète de la Méthode 2 :**
    * Les **26 pièces uniques** ont toutes vu leur volume extrait automatiquement dans `volumes_catia.csv` en une seule exécution, sans appliquer de matériau dans CATIA ni toucher à 3DEXPERIENCE.
-   * La fusion dans `index.html` calcule et affiche instantanément la masse ($m = \rho \times V$), le volume et le matériau officiel constructeur pour l'intégralité de l'assemblage.
+   * La fusion dans la page web calcule et affiche instantanément la masse, le volume et le matériau pour l'intégralité de l'assemblage.
 
 ---
 
-## 4. Verdict et recommandation d'ingénieur
+## 4. Verdict
 
-* **Méthode 1 (100 % PLM)** : Pertinente comme **preuve de concept (PoC)** démontrant qu'il est techniquement possible de faire transiter des propriétés physiques par 3DEXPERIENCE jusqu'à Creative Experience sans fichier externe. Elle reste néanmoins **inadaptée à un déploiement industriel** tant que Creative Experience ne conserve pas les attributs physiques natifs sur les sous-acteurs et que les champs texte 3DEXPERIENCE restent plafonnés à 255 caractères.
-* **Méthode 2 (Passerelle CSV)** : **Solution retenue pour l'architecture finale**. Elle répond à l'ensemble des exigences du cahier des charges (robustesse, scalabilité, rapidité de mise à jour, compatibilité PC/Web/VR) tout en conservant une logique 3D minimale dans Creative Experience.
+* **Méthode 1 (100 % PLM)** : Pertinente comme **preuve de concept** démontrant qu'il est techniquement possible de faire transiter des propriétés physiques CATIA jusqu'à Creative Experience sans fichier externe. Elle reste néanmoins **inadaptée à un déploiement industriel** tant que Creative Experience ne conserve pas les données des sous-acteurs et/ou que les champs texte 3DEXPERIENCE restent plafonnés à 255 caractères.
+* **Méthode 2 (Passerelle CSV)** : **Solution retenue pour l'architecture finale**. Elle répond à l'ensemble des exigences du cahier des charges (robustesse, scalabilité, rapidité de mise à jour) tout en conservant une logique minimale dans Creative Experience.
