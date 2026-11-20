@@ -43,7 +43,7 @@ Les tests réalisés sur l'assemblage réel de la tête d'impression de l'imprim
 
 1. **Saturation expérimentale de la Méthode 1 :**
    * **Format standard lisible :** 26 pièces génèrent **2 948 caractères** (11,5× la limite 3DEXPERIENCE) $\rightarrow$ Rejet par l'API.
-   * **Format compressé :** 26 pièces génèrent **721 caractères** (2,8× la limite) $\rightarrow$ Rejet par l'API (`Err -2147024809`).
+   * **Format compressé :** 26 pièces génèrent **721 caractères** (2,8× la limite) $\rightarrow$ Rejet par l'API.
    * **Limite de caractères :** On ne peut pas transmettre plus de 255 caractères par assemblage.
    * **Contournement :** Pour tout de même réussir à transmettre les données, les matériaux d'uniquement 4 pièces ont été paramétrés. Cette réussite confirme que la Méthode 1 ne peut être validée pour un assemblage comportant un grand nombre de pièces.
 
