@@ -9,16 +9,16 @@ Ce document synthétise l'évaluation comparative des deux architectures dévelo
 ### Méthode 1 : Approche intégrée 100 % PLM (Produit Père $\rightarrow$ `getPLMMetadata()`)
 * **Principe :** Maintenir une continuité numérique native sans fichier externe en injectant les propriétés physiques calculées dans CATIA (Masse, Volume, Matériau) dans le `Commentaire de révision` (`V_versionComment`) du produit père.
 * **Chaîne technique :**
-  1. **CATIA (Macro v8c) :** Passage en mode Édition $\rightarrow$ Détection matériaux (`MATPLMService`) et tri des pièces avec matériau $\rightarrow$ Calcul d'inertie (`InertiaService` / `smartVolume`) $\rightarrow$ Compression (`Nom|Masse|Volume|Materiau`) $\rightarrow$ Écriture PLM sur la racine + `Ctrl+S`.
+  1. **CATIA :** Passage en mode Édition $\rightarrow$ Détection matériaux (`MATPLMService`) et tri des pièces avec matériau $\rightarrow$ Calcul d'inertie (`InertiaService` / `smartVolume`) $\rightarrow$ Compression (`Nom|Masse|Volume|Materiau`) $\rightarrow$ Écriture PLM sur la racine + `Ctrl+S`.
   2. **Creative Experience (`beScript`) :** Lecture de `getPLMMetadata()` sur l'assemblage père $\rightarrow$ Décompression à la volée $\rightarrow$ Envoi JSON (`PLM_ASSEMBLAGE`) vers le Visualisateur Web 2D (`testweb`).
-  3. **IHS Web (`index.html`) :** Mise en cache du dictionnaire PLM et affichage dynamique au clic 3D.
+  3. **IHS Web (`methode1.html`) :** Mise en cache du dictionnaire PLM et affichage dynamique au clic 3D.
 
 ### Méthode 2 : Approche découplée par Passerelle CSV (CAO $\rightarrow$ CSV $\rightarrow$ Calcul Web)
 * **Principe :** Séparer le flux géométrique 3D (qui n'envoie que le nom de l'acteur cliqué) du flux de données physiques, en croisant des tables CSV externes directement dans le navigateur web.
 * **Chaîne technique :**
   1. **CATIA (Macro Export CSV) :** Passage en mode Édition $\rightarrow$ Calcul automatique des volumes géométriques (`smartVolume`) sur les géométries 3D nues $\rightarrow$ Export local `volumes_catia.csv` (`Piece;Volume`) sans sauvegarde 3DEXPERIENCE.
   2. **Base de données externe :** `materiaux.csv` (références constructeur Ultimaker, matériaux et densités $\rho$ en $\text{kg/m}^3$) + `catalogue_ultimaker.csv` (noms officiels).
-  3. **IHS Web (`index.html`) :** Fusion automatique des 3 CSV, conversion des volumes en $\text{m}^3$ et calcul dynamique de la masse en temps réel par la relation :
+  3. **IHS Web (`methode2.html`) :** Fusion automatique des 3 CSV, conversion des volumes en $\text{m}^3$ et calcul dynamique de la masse en temps réel par la relation :
      $$m = \rho \times V$$
 
 ---
