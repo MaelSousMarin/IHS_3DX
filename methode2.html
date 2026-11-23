@@ -470,7 +470,7 @@
         <div class="metrics-grid">
             <div class="metric-card"><div class="label">N° Réf</div><div class="value" id="valRef">--</div></div>
             <div class="metric-card"><div class="label">Masse Estimée</div><div class="value" id="valPoids">--</div></div>
-            <div class="metric-card"><div class="label">Matériau</div><div class="value" id="valMateriau">Standard</div></div>
+            <div class="metric-card"><div class="label">Matériau</div><div class="value" id="valMateriau">Générique</div></div>
             <div class="metric-card"><div class="label">Indice</div><div class="value" id="valIndice">8.0 / 10</div></div>
         </div>
         <div class="criteria-grid" id="grilleCriteres"></div>
@@ -530,7 +530,7 @@
             ],
             criteres: {
                 fonction: "Assurer la liaison mécanique, thermique ou fonctionnelle au sein du sous-ensemble de la machine.",
-                materiau: "Matériau standard conforme aux spécifications constructeur Ultimaker.",
+                materiau: "Matériau Générique conforme aux spécifications constructeur Ultimaker.",
                 fixation: "Assemblage standardisé par vis métriques ou emboîtement direct.",
                 fabrication: "Usinage ou injection plastique conforme au cahier des charges Ultimaker.",
                 environnement: "Recyclable selon la filière adaptée (métaux / polymères techniques).",
@@ -636,7 +636,7 @@
 
             // 1. Recherche du Matériau & Densité (par codeRef 4 chiffres ou par nom d'acteur)
             const matInfo = materiauxParRef[codeRef] || materiauxParRef[nomActeurClean] || null;
-            const materiau = matInfo ? matInfo.materiau : "Standard";
+            const materiau = matInfo ? matInfo.materiau : "Générique";
             const densite = matInfo ? matInfo.densite : null; // en kg/m³
 
             // 2. Recherche du Volume CATIA (par nom d'acteur exact ou par codeRef 4 chiffres)
