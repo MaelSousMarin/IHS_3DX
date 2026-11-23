@@ -34,6 +34,8 @@ Ce document synthétise l'évaluation comparative des deux architectures dévelo
 | **Logique dans Creative Experience** | 2 scripts `beScript` (1 script de clic + 1 script d'extraction des données sur l'assemblage) | 1 seul script `beScript` générique (envoi du nom de l'acteur cliqué) |
 | **Maintenabilité / Mise à jour** | **Lourde :** Relancer la macro, sauvegarder dans 3DEXPERIENCE et recharger la scène Creative Experience | **Variable :** Modifier une valeur dans un tableau ou relancer la macro |
 | **Propreté architecturale** | **Faible :** Détournement d'un champ de gestion de révision pour stocker des grandeurs physiques | **Élevée :** Séparation propre entre maquette 3D temps réel et base de données externe |
+| **Adaptabilité** | **Impossible :** Aucune donnée additionnelle ne peut être transmise | **Facile :** Ajout facile d'une colonne dans `matériaux.cvs` pour afficher d'autres données |
+
 
 ---
 
