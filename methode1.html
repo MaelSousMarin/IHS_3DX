@@ -470,7 +470,7 @@
         <div class="metrics-grid">
             <div class="metric-card"><div class="label">N° Réf</div><div class="value" id="valRef">--</div></div>
             <div class="metric-card"><div class="label">Masse Estimée</div><div class="value" id="valPoids">--</div></div>
-            <div class="metric-card"><div class="label">Matériau</div><div class="value" id="valMateriau">Standard</div></div>
+            <div class="metric-card"><div class="label">Matériau</div><div class="value" id="valMateriau">Générique</div></div>
             <div class="metric-card"><div class="label">Indice</div><div class="value" id="valIndice">8.0 / 10</div></div>
         </div>
         <div class="criteria-grid" id="grilleCriteres"></div>
@@ -533,7 +533,7 @@
             ],
             criteres: {
                 fonction: "Assurer la liaison mécanique, thermique ou fonctionnelle au sein du sous-ensemble de la machine.",
-                materiau: "Matériau standard conforme aux spécifications constructeur Ultimaker.",
+                materiau: "Matériau Générique conforme aux spécifications constructeur Ultimaker.",
                 fixation: "Assemblage standardisé par vis métriques ou emboîtement direct.",
                 fabrication: "Usinage ou injection plastique conforme au cahier des charges Ultimaker.",
                 environnement: "Recyclable selon la filière adaptée (métaux / polymères techniques).",
@@ -597,7 +597,7 @@
                     let nomPiecePLM = morceaux[0].replace(/^\[\d+\]\s*/, "").trim();
                     let masse = "--";
                     let volume = "--";
-                    let materiau = "Standard";
+                    let materiau = "Générique";
 
                     morceaux.forEach(m => {
                         const matchMasse = m.match(/^Masse\s*:\s*(.+)$/i);
@@ -731,7 +731,7 @@
 
             document.getElementById("valRef").textContent = info.ref;
             document.getElementById("valPoids").textContent = plmPiece ? plmPiece.masse : "Calcul CAO";
-            document.getElementById("valMateriau").textContent = plmPiece ? plmPiece.materiau : "Standard";
+            document.getElementById("valMateriau").textContent = plmPiece ? plmPiece.materiau : "Générique";
 
             const badge = document.getElementById("badgeEtat");
             const cleEtat = nomCAORecu || code;
@@ -904,7 +904,7 @@
             codesAnalyses.forEach(code => {
                 const info = catalogueRef[code] || { ref: code, nomOfficiel: "Pièce hors catalogue" };
                 const plm = trouverDonneesPLMPourPiece(code, code);
-                const materiau = plm ? plm.materiau : "Standard";
+                const materiau = plm ? plm.materiau : "Générique";
                 const poids = plm ? plm.masse : "Calcul CAO";
                 const etat = etatsPieces[code] ? etatsPieces[code].texte : "Non contrôlé";
                 const notesPiece = notesLocales.filter(n => n.code === code);
@@ -976,7 +976,7 @@
             codesAnalyses.forEach(code => {
                 const info = catalogueRef[code] || { ref: code, nomOfficiel: "Pièce inconnue" };
                 const plm = trouverDonneesPLMPourPiece(code, code);
-                const materiau = plm ? plm.materiau : "Standard";
+                const materiau = plm ? plm.materiau : "Générique";
                 const poids = plm ? plm.masse : "Calcul CAO";
                 const etat = etatsPieces[code] ? etatsPieces[code].texte : "Non contrôlé";
                 const notesPiece = notesLocales.filter(n => n.code === code);
