@@ -10,7 +10,7 @@
             --ds-blue-dark: #002C4B;
             --ds-blue-primary: #005386;
             --ds-blue-light: #0076BA;
-            
+
             /* Neutres & Fonds */
             --bg-main: #F5F5F7;
             --bg-card: #FFFFFF;
@@ -452,7 +452,6 @@
                 <span class="ref-item">Réf : <strong id="badgeRef">#----</strong></span>
                 <span class="ref-item">Acteur : <span class="cad-value" id="badgeCAO">--</span></span>
                 <span class="csv-dot" id="statutCSV">Chargement CSV...</span>
-                <span class="csv-dot" id="statutPLM" style="color: var(--ds-blue-primary); font-weight: 600;">PLM : En attente...</span>
             </div>
             <h1 id="nomPiece">Chargement de la pièce...</h1>
         </div>
@@ -470,9 +469,8 @@
     <div id="tab-infos" class="tab-content active">
         <div class="metrics-grid">
             <div class="metric-card"><div class="label">N° Réf</div><div class="value" id="valRef">--</div></div>
-            <div class="metric-card"><div class="label">Masse CAO</div><div class="value" id="valPoids">--</div></div>
-            <div class="metric-card"><div class="label">Volume CAO</div><div class="value" id="valVolume">--</div></div>
-            <div class="metric-card"><div class="label">Matériau CAO</div><div class="value" id="valMateriau">Standard</div></div>
+            <div class="metric-card"><div class="label">Masse Estimée</div><div class="value" id="valPoids">--</div></div>
+            <div class="metric-card"><div class="label">Matériau</div><div class="value" id="valMateriau">Standard</div></div>
             <div class="metric-card"><div class="label">Indice</div><div class="value" id="valIndice">8.0 / 10</div></div>
         </div>
         <div class="criteria-grid" id="grilleCriteres"></div>
@@ -518,11 +516,14 @@
 
     <script>
         let catalogueRef = {};
-
         // Dictionnaire qui stocke les données extraites du Commentaire de révision du produit père
         // Clé : nom de la pièce (ou code 4 chiffres) -> { nomPiece, masse, volume, materiau }
         let donneesPLMParPiece = {};
         let commentaireRevisionBrut = "";
+
+        let nbRefCSV = 0;
+        let nbPiecesPLM = 0;
+        let csvCharge = false;
 
         const fichesGeneriques = {
             etapes: [
@@ -561,10 +562,19 @@
         let codePieceActuel = "PRINTHEAD";
         let nomCAORecu = "PRINTHEAD";
         let critereActuel = "fonction";
-        
         let etatsPieces = JSON.parse(localStorage.getItem("etats_buse_ihs")) || {};
         let notesLocales = JSON.parse(localStorage.getItem("notes_buse_ihs")) || [];
         const FIREBASE_URL = "https://ensamstagem1-default-rtdb.europe-west1.firebasedatabase.app/notes_buse.json";
+
+        // Met à jour la ligne de statut unique (même présentation compacte que methode2.html)
+        function majStatutEnTete() {
+            const badgeCSV = document.getElementById("statutCSV");
+            if (!badgeCSV) return;
+            const partCSV = csvCharge ? `${nbRefCSV} réf` : "Mode PLM direct";
+            const partPLM = nbPiecesPLM > 0 ? `${nbPiecesPLM} PLM` : "PLM en attente";
+            badgeCSV.textContent = `${partCSV} | ${partPLM}`;
+            badgeCSV.style.color = "";
+        }
 
         // =========================================================================
         // DÉCODAGE DU COMMENTAIRE DE RÉVISION DU PRODUIT PÈRE (MÉTHODE 1)
@@ -572,10 +582,9 @@
         // =========================================================================
         function decoderCommentaireRevisionPere(texteCommentaire) {
             if (!texteCommentaire || typeof texteCommentaire !== "string") return;
-
             commentaireRevisionBrut = texteCommentaire;
             const lignes = texteCommentaire.split(/\r?\n/);
-            let nbPiecesPLM = 0;
+            let compteurPLM = 0;
 
             lignes.forEach(ligne => {
                 const l = ligne.trim();
@@ -594,7 +603,6 @@
                         const matchMasse = m.match(/^Masse\s*:\s*(.+)$/i);
                         const matchVol = m.match(/^Volume\s*:\s*(.+)$/i);
                         const matchMat = m.match(/^Mat[eé]riau\s*:\s*(.+)$/i);
-
                         if (matchMasse) masse = matchMasse[1].trim();
                         if (matchVol) volume = matchVol[1].trim();
                         if (matchMat) materiau = matchMat[1].trim();
@@ -615,16 +623,12 @@
                     if (match4) {
                         donneesPLMParPiece[match4[1]] = objetPLM;
                     }
-
-                    nbPiecesPLM++;
+                    compteurPLM++;
                 }
             });
 
-            const badgePLM = document.getElementById("statutPLM");
-            if (badgePLM) {
-                badgePLM.textContent = `PLM : ${nbPiecesPLM} pièces extraites`;
-                badgePLM.style.color = "#28894B";
-            }
+            nbPiecesPLM = compteurPLM;
+            majStatutEnTete();
 
             // Rafraîchit l'affichage de la pièce actuellement sélectionnée avec les nouvelles données PLM
             chargerPieceParCode(codePieceActuel);
@@ -633,7 +637,6 @@
         // Retrouve les données PLM correspondant à la pièce cliquée dans 3DEXPERIENCE
         function trouverDonneesPLMPourPiece(nomActeurClique, codeCatalogue) {
             if (!nomActeurClique) return null;
-
             const nomMin = nomActeurClique.trim().toLowerCase();
 
             // 1. Correspondance directe sur le nom de l'acteur
@@ -652,12 +655,10 @@
                     return val;
                 }
             }
-
             return null;
         }
 
         async function chargerCatalogueCSV() {
-            const badgeCSV = document.getElementById("statutCSV");
             try {
                 const reponse = await fetch("catalogue_ultimaker.csv?t=" + new Date().getTime());
                 if (!reponse.ok) throw new Error("CSV introuvable");
@@ -677,14 +678,15 @@
                         };
                     }
                 }
-
-                badgeCSV.textContent = `${Object.keys(catalogueRef).length} références chargées`;
+                csvCharge = true;
+                nbRefCSV = Object.keys(catalogueRef).length;
+                majStatutEnTete();
                 recevoirMessage3DX("PRINTHEAD");
             } catch (e) {
-                badgeCSV.textContent = "CSV non trouvé (Mode PLM direct)";
-                badgeCSV.style.color = "#E67E22";
+                csvCharge = false;
+                majStatutEnTete();
                 // Permet d'afficher les pièces PLM même sans fichier CSV externe
-                catalogueRef["PRINTHEAD"] = { ref: "PRINTHEAD", nomOfficiel: "Assemblage / Pièce CAO" };
+                catalogueRef["PRINTHEAD"] = { ref: "PRINTHEAD", nomOfficiel: "Print Head Assembly" };
                 recevoirMessage3DX("PRINTHEAD");
             }
         }
@@ -729,7 +731,6 @@
 
             document.getElementById("valRef").textContent = info.ref;
             document.getElementById("valPoids").textContent = plmPiece ? plmPiece.masse : "Calcul CAO";
-            document.getElementById("valVolume").textContent = plmPiece ? plmPiece.volume : "--";
             document.getElementById("valMateriau").textContent = plmPiece ? plmPiece.materiau : "Standard";
 
             const badge = document.getElementById("badgeEtat");
@@ -778,11 +779,12 @@
             genererGrilleCriteres();
             const info = catalogueRef[codePieceActuel];
             if (!info) return;
+
             const infoCritere = libellesCriteres.find(c => c.cle === cle);
             const plmPiece = trouverDonneesPLMPourPiece(nomCAORecu, codePieceActuel);
 
             document.getElementById("titreCritere").textContent = `${infoCritere.num}. ${infoCritere.titre} — [${info.ref}]`;
-            
+
             let texte = "";
             if (cle === "geometrie") {
                 texte = `Référence catalogue : ${info.ref}\nNom officiel : ${info.nomOfficiel}\nActeur 3DX cliqué : ${nomCAORecu}`;
@@ -871,60 +873,64 @@
 
             const dateJour = new Date().toLocaleString("fr-FR");
             let html = `
-            <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-            <head>
-                <meta charset='utf-8'>
-                <style>
-                    body { font-family: Arial, sans-serif; color: #1D1D1F; }
-                    h1 { color: #005386; border-bottom: 2px solid #005386; padding-bottom: 6px; }
-                    h2 { color: #002C4B; margin-top: 24px; font-size: 16px; }
-                    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-                    th { background-color: #005386; color: #FFFFFF; padding: 8px; text-align: left; border: 1px solid #CCCCCC; }
-                    td { padding: 8px; border: 1px solid #CCCCCC; vertical-align: top; font-size: 13px; }
-                </style>
-            </head>
-            <body>
-                <h1>Rapport d'Expertise & Maintenance — 3DEXPERIENCE</h1>
-                <p><strong>Date d'édition :</strong> ${dateJour}</p>
-
-                <h2>Synthèse des pièces analysées et observations</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th style="width:15%;">Référence</th>
-                            <th style="width:25%;">Désignation</th>
-                            <th style="width:15%;">État déclaré</th>
-                            <th style="width:45%;">Notes & Observations</th>
-                        </tr>
-                    </thead>
-                    <tbody>`;
+                <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+                <head>
+                    <meta charset='utf-8'>
+                    <style>
+                        body { font-family: Arial, sans-serif; color: #1D1D1F; }
+                        h1 { color: #005386; border-bottom: 2px solid #005386; padding-bottom: 6px; }
+                        h2 { color: #002C4B; margin-top: 24px; font-size: 16px; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+                        th { background-color: #005386; color: #FFFFFF; padding: 8px; text-align: left; border: 1px solid #CCCCCC; }
+                        td { padding: 8px; border: 1px solid #CCCCCC; vertical-align: top; font-size: 13px; }
+                    </style>
+                </head>
+                <body>
+                    <h1>Rapport d'Expertise & Maintenance — 3DEXPERIENCE</h1>
+                    <p><strong>Date d'édition :</strong> ${dateJour}</p>
+                    <h2>Synthèse des pièces analysées et observations</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width:12%;">Référence</th>
+                                <th style="width:22%;">Désignation</th>
+                                <th style="width:18%;">Matériau & Masse</th>
+                                <th style="width:13%;">État déclaré</th>
+                                <th style="width:35%;">Notes & Observations</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
 
             codesAnalyses.forEach(code => {
                 const info = catalogueRef[code] || { ref: code, nomOfficiel: "Pièce hors catalogue" };
+                const plm = trouverDonneesPLMPourPiece(code, code);
+                const materiau = plm ? plm.materiau : "Standard";
+                const poids = plm ? plm.masse : "Calcul CAO";
                 const etat = etatsPieces[code] ? etatsPieces[code].texte : "Non contrôlé";
                 const notesPiece = notesLocales.filter(n => n.code === code);
-
                 let htmlNotes = "<em>Aucune note</em>";
+
                 if (notesPiece.length > 0) {
-                    htmlNotes = notesPiece.map(n => 
+                    htmlNotes = notesPiece.map(n =>
                         `<div><strong>[${n.tag}]</strong> ${n.texte} <br><small style="color:#6E6E73;">(${n.auteur} - ${n.date})</small></div>`
                     ).join("<hr style='border:0; border-top:1px solid #EEE; margin:4px 0;'>");
                 }
 
                 html += `
-                        <tr>
-                            <td><strong>${info.ref}</strong></td>
-                            <td>${info.nomOfficiel}</td>
-                            <td><strong>${etat}</strong></td>
-                            <td>${htmlNotes}</td>
-                        </tr>`;
+                    <tr>
+                        <td><strong>${info.ref}</strong></td>
+                        <td>${info.nomOfficiel}</td>
+                        <td>${materiau}<br><small>Masse : ${poids}</small></td>
+                        <td><strong>${etat}</strong></td>
+                        <td>${htmlNotes}</td>
+                    </tr>`;
             });
 
             html += `
-                    </tbody>
-                </table>
-            </body>
-            </html>`;
+                        </tbody>
+                    </table>
+                </body>
+                </html>`;
 
             const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
             const lien = document.createElement('a');
@@ -941,32 +947,37 @@
             }
 
             let htmlExcel = `
-            <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
-            <head>
-                <meta charset="utf-8">
-                <style>
-                    table { border-collapse: collapse; font-family: Arial, sans-serif; }
-                    th { background-color: #005386; color: #FFFFFF; font-weight: bold; border: 1px solid #000000; padding: 6px; }
-                    td { border: 1px solid #CCCCCC; padding: 6px; vertical-align: top; }
-                </style>
-            </head>
-            <body>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Référence</th>
-                            <th>Nom Officiel</th>
-                            <th>État de la pièce</th>
-                            <th>Catégorie Note</th>
-                            <th>Auteur</th>
-                            <th>Date</th>
-                            <th>Commentaire / Observation</th>
-                        </tr>
-                    </thead>
-                    <tbody>`;
+                <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+                <head>
+                    <meta charset="utf-8">
+                    <style>
+                        table { border-collapse: collapse; font-family: Arial, sans-serif; }
+                        th { background-color: #005386; color: #FFFFFF; font-weight: bold; border: 1px solid #000000; padding: 6px; }
+                        td { border: 1px solid #CCCCCC; padding: 6px; vertical-align: top; }
+                    </style>
+                </head>
+                <body>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Référence</th>
+                                <th>Nom Officiel</th>
+                                <th>Matériau</th>
+                                <th>Masse Calculée</th>
+                                <th>État de la pièce</th>
+                                <th>Catégorie Note</th>
+                                <th>Auteur</th>
+                                <th>Date</th>
+                                <th>Commentaire / Observation</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
 
             codesAnalyses.forEach(code => {
                 const info = catalogueRef[code] || { ref: code, nomOfficiel: "Pièce inconnue" };
+                const plm = trouverDonneesPLMPourPiece(code, code);
+                const materiau = plm ? plm.materiau : "Standard";
+                const poids = plm ? plm.masse : "Calcul CAO";
                 const etat = etatsPieces[code] ? etatsPieces[code].texte : "Non contrôlé";
                 const notesPiece = notesLocales.filter(n => n.code === code);
 
@@ -975,6 +986,8 @@
                         <tr>
                             <td>${info.ref}</td>
                             <td>${info.nomOfficiel}</td>
+                            <td>${materiau}</td>
+                            <td>${poids}</td>
                             <td>${etat}</td>
                             <td>-</td>
                             <td>-</td>
@@ -984,24 +997,26 @@
                 } else {
                     notesPiece.forEach(n => {
                         htmlExcel += `
-                        <tr>
-                            <td>${info.ref}</td>
-                            <td>${info.nomOfficiel}</td>
-                            <td>${etat}</td>
-                            <td>${n.tag}</td>
-                            <td>${n.auteur}</td>
-                            <td>${n.date}</td>
-                            <td>${n.texte}</td>
-                        </tr>`;
+                            <tr>
+                                <td>${info.ref}</td>
+                                <td>${info.nomOfficiel}</td>
+                                <td>${materiau}</td>
+                                <td>${poids}</td>
+                                <td>${etat}</td>
+                                <td>${n.tag}</td>
+                                <td>${n.auteur}</td>
+                                <td>${n.date}</td>
+                                <td>${n.texte}</td>
+                            </tr>`;
                     });
                 }
             });
 
             htmlExcel += `
-                    </tbody>
-                </table>
-            </body>
-            </html>`;
+                        </tbody>
+                    </table>
+                </body>
+                </html>`;
 
             const blob = new Blob(['\ufeff', htmlExcel], { type: 'application/vnd.ms-excel' });
             const lien = document.createElement('a');
@@ -1016,7 +1031,6 @@
         // =========================================================================
         window.addEventListener("message", function (event) {
             if (!event.data) return;
-
             let raw = event.data;
 
             // 1. Test si c'est le paquet JSON envoyé par le script [1] sur l'assemblage
@@ -1025,7 +1039,7 @@
                 if (parsed && parsed.type === "PLM_ASSEMBLAGE") {
                     let texteCommentaire = parsed.commentaireRevision || "";
 
-                    // Secours : cherche toute clé contenant "comment" ou "description" dans plmBrut
+                    // Secours : cherche toute clé contenant "Masse :" dans plmBrut
                     if (!texteCommentaire && parsed.plmBrut) {
                         for (const [k, v] of Object.entries(parsed.plmBrut)) {
                             if (typeof v === "string" && v.includes("Masse :")) {
