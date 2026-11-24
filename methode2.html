@@ -163,6 +163,71 @@
         .tab-content.active { display: block; }
 
         /* =========================================================
+           2B. SÉLECTEUR BINAIRE RÉFÉRENCE / INSTANCE (STYLE PILULE)
+           ========================================================= */
+        .scope-block {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .scope-label {
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .scope-pill-container {
+            background: var(--bg-pill-bar);
+            padding: 4px;
+            border-radius: 999px;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .scope-btn {
+            flex: 1;
+            padding: 9px 16px;
+            background: transparent;
+            color: var(--text-main);
+            border: none;
+            outline: none;
+            border-radius: 999px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            text-align: center;
+            transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .scope-btn:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.6);
+            transform: scale(1.02);
+        }
+
+        .scope-btn.active {
+            background: var(--ds-blue-primary);
+            color: #FFFFFF;
+            box-shadow: 0 2px 8px rgba(0, 83, 134, 0.25);
+        }
+
+        .scope-target-preview {
+            font-size: 12px;
+            color: var(--text-muted);
+            background: var(--bg-input);
+            padding: 7px 12px;
+            border-radius: 10px;
+            word-break: break-word;
+        }
+
+        .scope-target-preview strong {
+            color: var(--ds-blue-primary);
+        }
+
+        /* =========================================================
            3. INDICATEURS CLÉS UNIS (SANS BORDURE)
            ========================================================= */
         .metrics-grid {
@@ -428,6 +493,27 @@
             font-size: 11.5px;
             color: var(--text-muted);
             margin-bottom: 6px;
+            word-break: break-word;
+        }
+
+        .note-item .note-scope-badge {
+            display: inline-block;
+            color: #FFFFFF;
+            border: none;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 10.5px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            margin-right: 6px;
+        }
+
+        .note-scope-badge.scope-ref {
+            background: var(--ds-blue-dark);
+        }
+
+        .note-scope-badge.scope-inst {
+            background: var(--ds-blue-light);
         }
 
         .note-item .note-tag {
@@ -487,6 +573,14 @@
         <div class="diag-section"><h3>Gamme de démontage</h3><ol class="steps-list" id="listeEtapes"></ol></div>
         <div class="diag-section">
             <h3>Déclarer l'état</h3>
+            <div class="scope-block">
+                <div class="scope-label">Appliquer l'état à :</div>
+                <div class="scope-pill-container">
+                    <button type="button" class="scope-btn" data-scope="reference" onclick="definirPorteeCible('reference')">Référence</button>
+                    <button type="button" class="scope-btn active" data-scope="instance" onclick="definirPorteeCible('instance')">Instance</button>
+                </div>
+                <div class="scope-target-preview" id="apercuCibleDiag">Cible : --</div>
+            </div>
             <div class="state-buttons">
                 <button class="state-btn btn-ok" onclick="definirEtat('Opérationnel', '#28894B')">Opérationnel</button>
                 <button class="state-btn btn-warn" onclick="definirEtat('Usé', '#E67E22')">Usé</button>
@@ -498,6 +592,14 @@
     <!-- ONGLET 3 : BLOC-NOTE -->
     <div id="tab-notes" class="tab-content">
         <div class="note-form">
+            <div class="scope-block">
+                <div class="scope-label">Appliquer la note à :</div>
+                <div class="scope-pill-container">
+                    <button type="button" class="scope-btn" data-scope="reference" onclick="definirPorteeCible('reference')">Référence</button>
+                    <button type="button" class="scope-btn active" data-scope="instance" onclick="definirPorteeCible('instance')">Instance</button>
+                </div>
+                <div class="scope-target-preview" id="apercuCibleNote">Cible : --</div>
+            </div>
             <input type="text" id="noteAuteur" placeholder="Nom de l'opérateur">
             <select id="noteTag">
                 <option value="Observation">Observation</option>
@@ -559,9 +661,11 @@
         let codePieceActuel = "PRINTHEAD";
         let nomCAORecu = "PRINTHEAD";
         let critereActuel = "fonction";
+        let porteeCible = "instance"; // Par défaut sur "instance"
         let dernierNomEnvoye3DX = undefined;
         
         let etatsPieces = JSON.parse(localStorage.getItem("etats_buse_ihs")) || {};
+        let etatsInstances = JSON.parse(localStorage.getItem("etats_instances_buse_ihs")) || {};
         let notesLocales = JSON.parse(localStorage.getItem("notes_buse_ihs")) || [];
         const FIREBASE_URL = "https://ensamstagem1-default-rtdb.europe-west1.firebasedatabase.app/notes_buse.json";
 
@@ -783,7 +887,7 @@
         }
 
         /* =========================================================================
-           4. SYNCHRONISATION SÉLECTION 3D & MISE À JOUR DE L'INTERFACE
+           4. SYNCHRONISATION SÉLECTION 3D, PORTÉE RÉFÉRENCE/INSTANCE & INTERFACE
            ========================================================================= */
         // Envoie le nom exact de la pièce actuellement sélectionnée vers 3DEXPERIENCE (ou null pour tout restaurer)
         function notifierSelection3DX(nomPiece) {
@@ -796,6 +900,35 @@
                 nomPiece: cible
             };
             window.parent.postMessage(JSON.stringify(paquet), "*");
+        }
+
+        // Synchronise le sélecteur binaire Référence / Instance sur les onglets Diagnostic et Bloc-note
+        function definirPorteeCible(nouvellePortee) {
+            porteeCible = (nouvellePortee === "reference") ? "reference" : "instance";
+            document.querySelectorAll('.scope-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.scope === porteeCible);
+            });
+            mettreAJourApercuCible();
+        }
+
+        // Met à jour le texte d'aperçu de cible sous chaque sélecteur binaire
+        function mettreAJourApercuCible() {
+            const info = catalogueRef[codePieceActuel] || { ref: codePieceActuel, nomOfficiel: "Pièce" };
+            const estInstanceValide = (porteeCible === "instance" && nomCAORecu && nomCAORecu !== "PRINTHEAD");
+
+            let htmlApercu = "";
+            if (estInstanceValide) {
+                htmlApercu = `Cible : <strong>${nomCAORecu}</strong> (instance spécifique)`;
+            } else if (porteeCible === "instance") {
+                htmlApercu = `Cible : <strong>${info.ref} — ${info.nomOfficiel}</strong> (sélectionnez une pièce 3D pour cibler une instance)`;
+            } else {
+                htmlApercu = `Cible : <strong>${info.ref} — ${info.nomOfficiel}</strong> (toutes les instances)`;
+            }
+
+            const elDiag = document.getElementById("apercuCibleDiag");
+            const elNote = document.getElementById("apercuCibleNote");
+            if (elDiag) elDiag.innerHTML = htmlApercu;
+            if (elNote) elNote.innerHTML = htmlApercu;
         }
 
         function changerOnglet(idOnglet, boutonClique) {
@@ -829,10 +962,18 @@
             document.getElementById("valPoids").textContent = phys.poids;
             document.getElementById("valMateriau").textContent = phys.materiau;
 
+            // Priorité d'affichage du badge d'état : Instance spécifique > Référence globale > Non contrôlé
             const badge = document.getElementById("badgeEtat");
-            if (etatsPieces[code]) {
-                badge.textContent = "État : " + etatsPieces[code].texte;
-                badge.style.background = etatsPieces[code].couleur;
+            const etatInst = (nomCAORecu && nomCAORecu !== "PRINTHEAD") ? etatsInstances[nomCAORecu] : null;
+            const etatRef = etatsPieces[code] || null;
+
+            if (etatInst) {
+                badge.textContent = "État (Instance) : " + etatInst.texte;
+                badge.style.background = etatInst.couleur;
+                badge.style.color = "#FFFFFF";
+            } else if (etatRef) {
+                badge.textContent = "État (Réf.) : " + etatRef.texte;
+                badge.style.background = etatRef.couleur;
                 badge.style.color = "#FFFFFF";
             } else {
                 badge.textContent = "État : Non contrôlé";
@@ -848,6 +989,7 @@
                 listeEtapes.appendChild(li);
             });
 
+            mettreAJourApercuCible();
             genererGrilleCriteres();
             afficherDetailCritere(critereActuel);
             afficherNotes();
@@ -898,17 +1040,36 @@
             }
 
             if (cle === "historique") {
-                const notesDeLaPiece = notesLocales.filter(n => n.code === codePieceActuel);
+                // Affiche les notes globales de la référence + les notes propres à l'instance sélectionnée
+                const notesDeLaPiece = notesLocales.filter(n => {
+                    if (n.portee === "instance") {
+                        return n.instanceCAO === nomCAORecu;
+                    }
+                    return n.code === codePieceActuel;
+                });
+
                 if (notesDeLaPiece.length > 0) {
-                    texte += "\n\nNOTES OPÉRATEURS : " + notesDeLaPiece.map(n => `[${n.tag}] ${n.texte} (${n.auteur})`).join(" | ");
+                    texte += "\n\nNOTES OPÉRATEURS : " + notesDeLaPiece.map(n => {
+                        const prefixe = n.portee === "instance" ? "[INSTANCE]" : "[RÉFÉRENCE]";
+                        return `${prefixe} [${n.tag}] ${n.texte} (${n.auteur})`;
+                    }).join(" | ");
                 }
             }
             document.getElementById("texteCritere").textContent = texte;
         }
 
         function definirEtat(texteEtat, couleurHex) {
-            etatsPieces[codePieceActuel] = { texte: texteEtat, couleur: couleurHex };
-            localStorage.setItem("etats_buse_ihs", JSON.stringify(etatsPieces));
+            if (porteeCible === "instance" && nomCAORecu && nomCAORecu !== "PRINTHEAD") {
+                etatsInstances[nomCAORecu] = {
+                    code: codePieceActuel,
+                    texte: texteEtat,
+                    couleur: couleurHex
+                };
+                localStorage.setItem("etats_instances_buse_ihs", JSON.stringify(etatsInstances));
+            } else {
+                etatsPieces[codePieceActuel] = { texte: texteEtat, couleur: couleurHex };
+                localStorage.setItem("etats_buse_ihs", JSON.stringify(etatsPieces));
+            }
             chargerPieceParCode(codePieceActuel);
         }
 
@@ -919,9 +1080,17 @@
             if (!texte || !catalogueRef[codePieceActuel]) return;
 
             const info = catalogueRef[codePieceActuel];
+            const porteeEffective = (porteeCible === "instance" && nomCAORecu && nomCAORecu !== "PRINTHEAD")
+                ? "instance"
+                : "reference";
+
             const nouvelleNote = {
+                portee: porteeEffective,
                 code: codePieceActuel,
-                nomPiece: `${info.ref} - ${info.nomOfficiel}`,
+                instanceCAO: porteeEffective === "instance" ? nomCAORecu : null,
+                nomPiece: porteeEffective === "instance"
+                    ? nomCAORecu
+                    : `${info.ref} - ${info.nomOfficiel}`,
                 auteur: auteur,
                 tag: tag,
                 texte: texte,
@@ -945,30 +1114,88 @@
                 return;
             }
             notesLocales.forEach(n => {
+                const estInstance = (n.portee === "instance");
+                const badgePorteeClass = estInstance ? "scope-inst" : "scope-ref";
+                const badgePorteeTexte = estInstance ? "INSTANCE" : "RÉFÉRENCE";
+                const cibleTexte = estInstance ? (n.instanceCAO || n.nomPiece) : n.nomPiece;
+
                 const div = document.createElement("div");
                 div.className = "note-item";
                 div.innerHTML = `
-                    <div class="note-meta">${n.date} — <strong>${n.auteur}</strong> sur <strong>${n.nomPiece}</strong></div>
-                    <div><span class="note-tag">${n.tag}</span>${n.texte}</div>
+                    <div class="note-meta">${n.date} — <strong>${n.auteur}</strong> sur <strong>${cibleTexte}</strong></div>
+                    <div>
+                        <span class="note-scope-badge ${badgePorteeClass}">${badgePorteeTexte}</span>
+                        <span class="note-tag">${n.tag}</span>${n.texte}
+                    </div>
                 `;
                 conteneur.appendChild(div);
             });
         }
 
         /* =========================================================================
-           5. EXPORTS WORD & EXCEL ENRICHIS (AVEC MATÉRIAU ET MASSE CALCULÉE)
+           5. EXPORTS WORD & EXCEL (PORTÉE / INSTANCE, SANS MATÉRIAU NI MASSE)
            ========================================================================= */
-        function obtenirPiecesAnalysees() {
-            const codes = new Set([
-                ...Object.keys(etatsPieces),
-                ...notesLocales.map(n => n.code)
-            ]);
-            return Array.from(codes);
+        function obtenirCiblesAnalysees() {
+            const cibles = [];
+            const refsVues = new Set();
+            const instancesVues = new Map(); // instanceCAO -> code
+
+            // 1. Cibles de type Référence (états ou notes globales)
+            Object.keys(etatsPieces).forEach(code => refsVues.add(code));
+            notesLocales.forEach(n => {
+                if (n.portee !== "instance" && n.code) {
+                    refsVues.add(n.code);
+                }
+            });
+
+            refsVues.forEach(code => {
+                cibles.push({
+                    type: "reference",
+                    code: code,
+                    instanceCAO: null
+                });
+            });
+
+            // 2. Cibles de type Instance (états ou notes spécifiques à une instance CATIA)
+            Object.entries(etatsInstances).forEach(([inst, data]) => {
+                instancesVues.set(inst, (data && data.code) ? data.code : extraireRefDepuisNomCATIA(inst));
+            });
+            notesLocales.forEach(n => {
+                if (n.portee === "instance" && n.instanceCAO) {
+                    if (!instancesVues.has(n.instanceCAO)) {
+                        instancesVues.set(n.instanceCAO, n.code || extraireRefDepuisNomCATIA(n.instanceCAO));
+                    }
+                }
+            });
+
+            instancesVues.forEach((code, inst) => {
+                cibles.push({
+                    type: "instance",
+                    code: code,
+                    instanceCAO: inst
+                });
+            });
+
+            return cibles;
+        }
+
+        function obtenirNotesPourCible(cible) {
+            if (cible.type === "instance") {
+                return notesLocales.filter(n => n.portee === "instance" && n.instanceCAO === cible.instanceCAO);
+            }
+            return notesLocales.filter(n => n.portee !== "instance" && n.code === cible.code);
+        }
+
+        function obtenirEtatPourCible(cible) {
+            if (cible.type === "instance") {
+                return etatsInstances[cible.instanceCAO] ? etatsInstances[cible.instanceCAO].texte : "Non contrôlé";
+            }
+            return etatsPieces[cible.code] ? etatsPieces[cible.code].texte : "Non contrôlé";
         }
 
         function exporterWord() {
-            const codesAnalyses = obtenirPiecesAnalysees();
-            if (codesAnalyses.length === 0) {
+            const cibles = obtenirCiblesAnalysees();
+            if (cibles.length === 0) {
                 alert("Aucune pièce analysée ou note enregistrée à exporter.");
                 return;
             }
@@ -996,23 +1223,25 @@
                     <thead>
                         <tr>
                             <th style="width:12%;">Référence</th>
-                            <th style="width:22%;">Désignation</th>
-                            <th style="width:18%;">Matériau & Masse</th>
+                            <th style="width:24%;">Portée / Instance</th>
+                            <th style="width:20%;">Désignation</th>
                             <th style="width:13%;">État déclaré</th>
-                            <th style="width:35%;">Notes & Observations</th>
+                            <th style="width:31%;">Notes & Observations</th>
                         </tr>
                     </thead>
                     <tbody>`;
 
-            codesAnalyses.forEach(code => {
-                const info = catalogueRef[code] || { ref: code, nomOfficiel: "Pièce hors catalogue" };
-                const phys = calculerDonneesPhysiques(code, code);
-                const etat = etatsPieces[code] ? etatsPieces[code].texte : "Non contrôlé";
-                const notesPiece = notesLocales.filter(n => n.code === code);
+            cibles.forEach(cible => {
+                const info = catalogueRef[cible.code] || { ref: cible.code, nomOfficiel: "Pièce hors catalogue" };
+                const porteeLabel = (cible.type === "instance")
+                    ? `<strong>Instance :</strong> ${cible.instanceCAO}`
+                    : `<strong>Référence</strong> (toutes)`;
+                const etat = obtenirEtatPourCible(cible);
+                const notesCible = obtenirNotesPourCible(cible);
 
                 let htmlNotes = "<em>Aucune note</em>";
-                if (notesPiece.length > 0) {
-                    htmlNotes = notesPiece.map(n => 
+                if (notesCible.length > 0) {
+                    htmlNotes = notesCible.map(n => 
                         `<div><strong>[${n.tag}]</strong> ${n.texte} <br><small style="color:#6E6E73;">(${n.auteur} - ${n.date})</small></div>`
                     ).join("<hr style='border:0; border-top:1px solid #EEE; margin:4px 0;'>");
                 }
@@ -1020,8 +1249,8 @@
                 html += `
                         <tr>
                             <td><strong>${info.ref}</strong></td>
+                            <td>${porteeLabel}</td>
                             <td>${info.nomOfficiel}</td>
-                            <td>${phys.materiau}<br><small>Masse : ${phys.poids}</small></td>
                             <td><strong>${etat}</strong></td>
                             <td>${htmlNotes}</td>
                         </tr>`;
@@ -1041,8 +1270,8 @@
         }
 
         function exporterExcel() {
-            const codesAnalyses = obtenirPiecesAnalysees();
-            if (codesAnalyses.length === 0) {
+            const cibles = obtenirCiblesAnalysees();
+            if (cibles.length === 0) {
                 alert("Aucune donnée à exporter vers Excel.");
                 return;
             }
@@ -1062,9 +1291,8 @@
                     <thead>
                         <tr>
                             <th>Référence</th>
+                            <th>Portée / Instance</th>
                             <th>Nom Officiel</th>
-                            <th>Matériau</th>
-                            <th>Masse Calculée</th>
                             <th>État de la pièce</th>
                             <th>Catégorie Note</th>
                             <th>Auteur</th>
@@ -1074,19 +1302,20 @@
                     </thead>
                     <tbody>`;
 
-            codesAnalyses.forEach(code => {
-                const info = catalogueRef[code] || { ref: code, nomOfficiel: "Pièce inconnue" };
-                const phys = calculerDonneesPhysiques(code, code);
-                const etat = etatsPieces[code] ? etatsPieces[code].texte : "Non contrôlé";
-                const notesPiece = notesLocales.filter(n => n.code === code);
+            cibles.forEach(cible => {
+                const info = catalogueRef[cible.code] || { ref: cible.code, nomOfficiel: "Pièce inconnue" };
+                const porteeLabel = (cible.type === "instance")
+                    ? `Instance : ${cible.instanceCAO}`
+                    : "Référence (toutes)";
+                const etat = obtenirEtatPourCible(cible);
+                const notesCible = obtenirNotesPourCible(cible);
 
-                if (notesPiece.length === 0) {
+                if (notesCible.length === 0) {
                     htmlExcel += `
                         <tr>
                             <td>${info.ref}</td>
+                            <td>${porteeLabel}</td>
                             <td>${info.nomOfficiel}</td>
-                            <td>${phys.materiau}</td>
-                            <td>${phys.poids}</td>
                             <td>${etat}</td>
                             <td>-</td>
                             <td>-</td>
@@ -1094,13 +1323,12 @@
                             <td>Aucune observation saisie</td>
                         </tr>`;
                 } else {
-                    notesPiece.forEach(n => {
+                    notesCible.forEach(n => {
                         htmlExcel += `
                         <tr>
                             <td>${info.ref}</td>
+                            <td>${porteeLabel}</td>
                             <td>${info.nomOfficiel}</td>
-                            <td>${phys.materiau}</td>
-                            <td>${phys.poids}</td>
                             <td>${etat}</td>
                             <td>${n.tag}</td>
                             <td>${n.auteur}</td>
