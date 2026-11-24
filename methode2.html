@@ -559,6 +559,7 @@
         let codePieceActuel = "PRINTHEAD";
         let nomCAORecu = "PRINTHEAD";
         let critereActuel = "fonction";
+        let dernierNomEnvoye3DX = undefined;
         
         let etatsPieces = JSON.parse(localStorage.getItem("etats_buse_ihs")) || {};
         let notesLocales = JSON.parse(localStorage.getItem("notes_buse_ihs")) || [];
@@ -786,9 +787,13 @@
            ========================================================================= */
         // Envoie le nom exact de la pièce actuellement sélectionnée vers 3DEXPERIENCE (ou null pour tout restaurer)
         function notifierSelection3DX(nomPiece) {
+            const cible = nomPiece || null;
+            if (cible === dernierNomEnvoye3DX) return; // Évite les envois redondants
+            dernierNomEnvoye3DX = cible;
+
             const paquet = {
                 action: "SYNC_SELECTION",
-                nomPiece: nomPiece || null
+                nomPiece: cible
             };
             window.parent.postMessage(JSON.stringify(paquet), "*");
         }
@@ -1121,8 +1126,30 @@
 
         window.addEventListener("message", function (event) {
             if (!event.data) return;
-            let msg = typeof event.data === 'string' ? event.data.trim().replace(/^['"]|['"]$/g, '') : "";
-            if (msg) recevoirMessage3DX(msg);
+
+            // Ignore immédiatement nos propres messages sortants (évite la boucle infinie)
+            if (typeof event.data === "object" && event.data.action === "SYNC_SELECTION") {
+                return;
+            }
+
+            if (typeof event.data === "string") {
+                const brut = event.data.trim();
+                if (!brut) return;
+
+                if (brut.startsWith("{")) {
+                    try {
+                        const parsed = JSON.parse(brut);
+                        if (parsed && parsed.action === "SYNC_SELECTION") {
+                            return; // Écho ignoré
+                        }
+                    } catch (e) {
+                        // Pas un JSON valide, on continue
+                    }
+                }
+
+                const msg = brut.replace(/^['"]|['"]$/g, "");
+                if (msg) recevoirMessage3DX(msg);
+            }
         });
 
         // Restaure la pièce 3D d'origine si l'utilisateur quitte la page (ex. retour menu)
