@@ -139,9 +139,16 @@
             gap: 8px;
         }
 
+        .search-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+
         .search-input {
             width: 100%;
-            padding: 10px 14px;
+            padding: 10px 36px 10px 14px;
             border-radius: 12px;
             border: none;
             background: var(--bg-input);
@@ -153,6 +160,36 @@
 
         .search-input:focus {
             background: #E8ECF2;
+        }
+
+        .search-clear-btn {
+            position: absolute;
+            right: 8px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: none;
+            outline: none;
+            background: var(--bg-pill-bar);
+            color: var(--text-muted);
+            font-size: 14px;
+            font-weight: 700;
+            line-height: 1;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.18s ease, color 0.18s ease, transform 0.15s ease;
+        }
+
+        .search-clear-btn.visible {
+            display: inline-flex;
+        }
+
+        .search-clear-btn:hover {
+            background: var(--ds-blue-primary);
+            color: #FFFFFF;
+            transform: scale(1.06);
         }
 
         .tree-actions-row {
@@ -189,15 +226,12 @@
         }
 
         /* =========================================================
-           4. ARBRE HIÉRARCHIQUE DES PIÈCES (SANS EMOJI)
+           4. ARBRE HIÉRARCHIQUE DES PIÈCES (SANS DOUBLE SCROLLBAR)
            ========================================================= */
         .tree-scroll {
             display: flex;
             flex-direction: column;
             gap: 2px;
-            max-height: calc(100vh - 210px);
-            overflow-y: auto;
-            padding-right: 2px;
         }
 
         .tree-node {
@@ -535,7 +569,10 @@
                     <span class="count-pill" id="badgeNbPieces">0 pièce</span>
                 </div>
                 <div class="tree-controls">
-                    <input type="text" id="champRecherche" class="search-input" placeholder="Filtrer par référence ou nom..." oninput="mettreAJourRecherche(this.value)">
+                    <div class="search-wrap">
+                        <input type="text" id="champRecherche" class="search-input" placeholder="Filtrer par référence ou nom..." oninput="mettreAJourRecherche(this.value)">
+                        <button type="button" id="btnClearRecherche" class="search-clear-btn" onclick="effacerRecherche()" title="Effacer la recherche" aria-label="Effacer la recherche">&times;</button>
+                    </div>
                     <div class="tree-actions-row">
                         <button type="button" class="mini-btn primary" onclick="selectionnerPiece(null)">Vue complète</button>
                         <button type="button" class="mini-btn" onclick="basculerToutArbre(false)">Tout replier</button>
@@ -583,7 +620,7 @@
         let arbreStructure = null;
         let pieceSelectionnee = null;
         let filtreRecherche = "";
-        let noeudsOuverts = new Set(); // Stocke les IDs des sous-ensembles / groupes dépliés
+        let noeudsOuverts = new Set();
         let totalPiecesFeuilles = 0;
 
         let etatsPieces = {};
@@ -633,7 +670,6 @@
                 }
             } catch (e) {}
 
-            // Si l'arbre a déjà été reçu avant le CSV, on reconstruit avec les noms officiels
             if (arbreBrut) {
                 construireEtAfficherArbre();
             }
@@ -715,7 +751,6 @@
                 }
             });
 
-            // 1. Regroupement strictement local des pièces feuilles de CE sous-ensemble
             const groupesLocaux = new Map();
             piecesFeuillesBrutes.forEach(p => {
                 totalPiecesFeuilles++;
@@ -736,12 +771,10 @@
 
             const enfantsStructures = [];
 
-            // 2. Récursion sur les sous-ensembles directs
             sousEnsemblesBruts.forEach(se => {
                 enfantsStructures.push(structurerNoeud(se, idNoeud));
             });
 
-            // 3. Ajout des pièces locales : 1 instance = ligne directe, >= 2 instances = groupe dépliable
             groupesLocaux.forEach((groupe, cle) => {
                 if (groupe.instances.length === 1) {
                     enfantsStructures.push(groupe.instances[0]);
@@ -769,7 +802,6 @@
             totalPiecesFeuilles = 0;
             arbreStructure = structurerNoeud(arbreBrut, "");
 
-            // Par défaut, la racine est ouverte au démarrage
             noeudsOuverts.add(arbreStructure.id);
 
             const badgeNb = document.getElementById("badgeNbPieces");
@@ -822,7 +854,6 @@
             const wrapper = document.createElement("div");
             wrapper.className = "tree-node";
 
-            // --- CAS A : SOUS-ENSEMBLE RÉTRACTABLE ---
             if (noeud.type === "sous_ensemble") {
                 const estOuvert = Boolean(filtreRecherche) || noeudsOuverts.has(noeud.id);
 
@@ -856,7 +887,6 @@
                 return wrapper;
             }
 
-            // --- CAS B : GROUPE DE RÉFÉRENCES IDENTIQUES (LOCAL AU SOUS-ENSEMBLE) ---
             if (noeud.type === "groupe_ref") {
                 const estOuvert = Boolean(filtreRecherche) || noeudsOuverts.has(noeud.id);
                 const badgeRefHTML = noeud.infos.badgeRef
@@ -898,7 +928,6 @@
                 return wrapper;
             }
 
-            // --- CAS C : PIÈCE / INSTANCE CLIQUABLE ---
             const estSelectionnee = (pieceSelectionnee === noeud.nomCAO);
             const etatObj = obtenirCouleurEtat(noeud.nomCAO, noeud.infos.codeRef);
             const pastilleHTML = etatObj
@@ -912,7 +941,6 @@
             btn.title = noeud.nomCAO;
 
             if (estDansGroupe) {
-                // Dans un groupe [xN], on affiche directement l'identifiant d'instance (ex. NAUO142)
                 btn.innerHTML =
                     `<span class="leaf-marker"></span>` +
                     `<span class="tree-label-wrap"><span class="tree-instance-tag">${echapperHTML(noeud.infos.suffixeInstance)}</span></span>` +
@@ -947,8 +975,24 @@
         }
 
         function mettreAJourRecherche(valeur) {
-            filtreRecherche = (valeur || "").trim();
+            const brut = valeur || "";
+            filtreRecherche = brut.trim();
+
+            const btnClear = document.getElementById("btnClearRecherche");
+            if (btnClear) {
+                btnClear.classList.toggle("visible", brut.length > 0);
+            }
+
             afficherArbre();
+        }
+
+        function effacerRecherche() {
+            const champ = document.getElementById("champRecherche");
+            if (champ) {
+                champ.value = "";
+                champ.focus();
+            }
+            mettreAJourRecherche("");
         }
 
         function basculerToutArbre(ouvrir) {
@@ -968,7 +1012,6 @@
             afficherArbre();
         }
 
-        // Déplie automatiquement tous les parents d'une pièce sélectionnée depuis la 3D
         function deplierCheminVersPiece(noeud, nomCAO) {
             if (!noeud) return false;
             if (noeud.type === "piece") {
@@ -985,7 +1028,6 @@
             return false;
         }
 
-        // Clic dans l'arbre -> informe 3DEXPERIENCE (Bleu Compass + proprieteM2.html)
         function selectionnerPiece(nomCAO) {
             pieceSelectionnee = nomCAO || null;
             afficherArbre();
@@ -996,7 +1038,6 @@
             }), "*");
         }
 
-        // Surbrillance dans l'arbre suite à un clic dans la scène 3D
         function surlignerDepuis3D(nomCAO) {
             pieceSelectionnee = nomCAO || null;
             if (pieceSelectionnee && arbreStructure) {
@@ -1107,24 +1148,20 @@
 
                 if (!paquet || typeof paquet !== "object") return;
 
-                // Ignore nos propres messages sortants
                 if (paquet.action === "SELECT_FROM_TREE" || paquet.action === "TREE_READY") return;
                 if (paquet.type === "PLAY_ANIMATION" || paquet.type === "STOP_ANIMATION") return;
 
-                // 1. Réception de l'arbre 3D complet depuis CouleurSelection
                 if (paquet.action === "TREE_DATA" && paquet.arbre) {
                     arbreBrut = paquet.arbre;
                     construireEtAfficherArbre();
                     return;
                 }
 
-                // 2. Synchronisation de la sélection suite à un clic dans la 3D
                 if (paquet.action === "HIGHLIGHT_TREE") {
                     surlignerDepuis3D(paquet.nomPiece || null);
                     return;
                 }
 
-                // 3. Liste et état des animations (compatible avec ton script d'animations existant)
                 if (Array.isArray(paquet.animations)) {
                     listeAnimations = paquet.animations;
                     document.getElementById("badgeStatus").textContent = "Synchronisé";
@@ -1142,7 +1179,6 @@
             } catch (e) {}
         });
 
-        // Mise à jour instantanée des pastilles dès que proprieteM2.html enregistre un état
         window.addEventListener("storage", function (e) {
             if (e.key === "etats_buse_ihs" || e.key === "etats_instances_buse_ihs") {
                 afficherArbre();
@@ -1157,10 +1193,7 @@
             chargerEtatsDepuisStorage();
             chargerCatalogueCSV();
 
-            // 1. Signal d'initialisation pour ton script d'animations existant
             window.parent.postMessage("ready", "*");
-
-            // 2. Demande de la hiérarchie 3D à CouleurSelection
             window.parent.postMessage(JSON.stringify({ action: "TREE_READY" }), "*");
         };
     </script>
