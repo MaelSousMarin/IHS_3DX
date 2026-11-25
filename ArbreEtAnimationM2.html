@@ -141,19 +141,19 @@
 
         .search-wrap {
             position: relative;
-            display: flex;
-            align-items: center;
             width: 100%;
         }
 
         .search-input {
             width: 100%;
-            padding: 10px 36px 10px 14px;
+            display: block;
+            padding: 10px 38px 10px 14px;
             border-radius: 12px;
             border: none;
             background: var(--bg-input);
             color: var(--text-main);
             font-size: 13px;
+            line-height: 1.4;
             outline: none;
             transition: background-color 0.2s ease;
         }
@@ -164,17 +164,17 @@
 
         .search-clear-btn {
             position: absolute;
+            top: 50%;
             right: 8px;
+            transform: translateY(-50%);
             width: 22px;
             height: 22px;
+            padding: 0;
             border-radius: 50%;
             border: none;
             outline: none;
             background: var(--bg-pill-bar);
             color: var(--text-muted);
-            font-size: 14px;
-            font-weight: 700;
-            line-height: 1;
             cursor: pointer;
             display: none;
             align-items: center;
@@ -189,7 +189,14 @@
         .search-clear-btn:hover {
             background: var(--ds-blue-primary);
             color: #FFFFFF;
-            transform: scale(1.06);
+            transform: translateY(-50%) scale(1.06);
+        }
+
+        .search-clear-btn svg {
+            width: 10px;
+            height: 10px;
+            display: block;
+            pointer-events: none;
         }
 
         .tree-actions-row {
@@ -571,7 +578,12 @@
                 <div class="tree-controls">
                     <div class="search-wrap">
                         <input type="text" id="champRecherche" class="search-input" placeholder="Filtrer par référence ou nom..." oninput="mettreAJourRecherche(this.value)">
-                        <button type="button" id="btnClearRecherche" class="search-clear-btn" onclick="effacerRecherche()" title="Effacer la recherche" aria-label="Effacer la recherche">&times;</button>
+                        <button type="button" id="btnClearRecherche" class="search-clear-btn" onclick="effacerRecherche()" title="Effacer la recherche" aria-label="Effacer la recherche">
+                            <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                                <line x1="2.5" y1="2.5" x2="9.5" y2="9.5" />
+                                <line x1="9.5" y1="2.5" x2="2.5" y2="9.5" />
+                            </svg>
+                        </button>
                     </div>
                     <div class="tree-actions-row">
                         <button type="button" class="mini-btn primary" onclick="selectionnerPiece(null)">Vue complète</button>
