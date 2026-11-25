@@ -34,7 +34,7 @@
             background-color: var(--bg-main);
             color: var(--text-main);
             min-height: 100vh;
-            padding: 20px 16px;
+            padding: 24px 16px;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -43,7 +43,7 @@
 
         .container {
             width: 100%;
-            max-width: 680px;
+            max-width: 760px;
             display: flex;
             flex-direction: column;
             gap: 18px;
@@ -81,10 +81,32 @@
             margin-top: 6px;
         }
 
-        /* Grille des 3 boutons de navigation */
+        .repo-meta {
+            margin-top: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .meta-pill {
+            background: var(--bg-input);
+            color: var(--text-muted);
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 11.5px;
+            font-weight: 600;
+        }
+
+        .meta-pill.primary {
+            color: var(--ds-blue-primary);
+        }
+
+        /* Grille dynamique des pages du dépôt */
         .nav-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
             gap: 14px;
         }
 
@@ -130,6 +152,7 @@
             font-size: 17px;
             font-weight: 700;
             color: var(--ds-blue-primary);
+            word-break: break-word;
             transition: color 0.2s ease;
         }
 
@@ -141,6 +164,18 @@
             transition: color 0.2s ease;
         }
 
+        .nav-file {
+            font-family: Consolas, monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+            background: var(--bg-input);
+            padding: 3px 8px;
+            border-radius: 6px;
+            align-self: flex-start;
+            margin-top: 6px;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
         .nav-btn:hover .nav-num,
         .nav-btn:hover .nav-desc {
             color: rgba(255, 255, 255, 0.82);
@@ -148,6 +183,21 @@
 
         .nav-btn:hover .nav-title {
             color: #FFFFFF;
+        }
+
+        .nav-btn:hover .nav-file {
+            background: rgba(255, 255, 255, 0.18);
+            color: #FFFFFF;
+        }
+
+        .status-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 24px 20px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 13.5px;
+            box-shadow: var(--shadow-soft);
         }
     </style>
 </head>
@@ -157,29 +207,170 @@
         <div class="header">
             <div class="subtitle">3DEXPERIENCE — Passeport Numérique</div>
             <h1>Menu Principal</h1>
-            <p>Sélectionnez une interface pour y accéder</p>
+            <p>Sélectionnez une page du dépôt pour y accéder</p>
+            <div class="repo-meta">
+                <span class="meta-pill primary" id="badgeRepo">MaelSousMarin/IHS_3DX</span>
+                <span class="meta-pill" id="badgeStatut">Lecture du dépôt...</span>
+            </div>
         </div>
 
-        <div class="nav-grid">
-            <a href="methode1.html" class="nav-btn">
-                <span class="nav-num">Page 01</span>
-                <span class="nav-title">Méthode 1</span>
-                <span class="nav-desc">Passeport technique via métadonnées PLM</span>
-            </a>
-
-            <a href="methode2.html" class="nav-btn">
-                <span class="nav-num">Page 02</span>
-                <span class="nav-title">Méthode 2</span>
-                <span class="nav-desc">Passeport technique via fichiers CSV</span>
-            </a>
-
-            <a href="animations.html" class="nav-btn">
-                <span class="nav-num">Page 03</span>
-                <span class="nav-title">Animations</span>
-                <span class="nav-desc">Pilotage des séquences d'assemblage 3D</span>
-            </a>
+        <div class="nav-grid" id="navGrid">
+            <div class="status-card">Chargement des pages disponibles dans le dépôt...</div>
         </div>
     </div>
+
+    <script>
+        /* =========================================================================
+           1. CONFIGURATION DU DÉPÔT & DESCRIPTIONS OPTIONNELLES DES PAGES CONNUES
+           ========================================================================= */
+        const DEFAULT_OWNER = "MaelSousMarin";
+        const DEFAULT_REPO = "IHS_3DX";
+
+        // Descriptions personnalisées pour les pages connues (toute autre page .html est ajoutée automatiquement)
+        const DESCRIPTIONS_CONNUES = {
+            "ArbreEtAnimationM2.html": {
+                titre: "Arbre 3D & Animations",
+                desc: "Hiérarchie de l'assemblage et pilotage des séquences 3D"
+            },
+            "proprieteM2.html": {
+                titre: "Propriétés (Méthode 2)",
+                desc: "Passeport CSV, diagnostic par instance et bloc-note avec captures"
+            },
+            "methode1.html": {
+                titre: "Méthode 1",
+                desc: "Passeport technique via métadonnées PLM"
+            },
+            "methode2.html": {
+                titre: "Méthode 2",
+                desc: "Passeport technique via fichiers CSV"
+            },
+            "animations.html": {
+                titre: "Animations",
+                desc: "Pilotage des séquences d'assemblage 3D"
+            }
+        };
+
+        // Liste de secours utilisée uniquement si l'API GitHub est inaccessible
+        const PAGES_SECOURS = [
+            "ArbreEtAnimationM2.html",
+            "proprieteM2.html",
+            "methode1.html",
+            "methode2.html",
+            "animations.html"
+        ];
+
+        function detecterDepotGitHub() {
+            const host = window.location.hostname || "";
+            if (host.endsWith(".github.io")) {
+                const owner = host.replace(".github.io", "");
+                const segments = window.location.pathname.split("/").filter(Boolean);
+                const repo = segments.length > 0 ? segments[0] : DEFAULT_REPO;
+                return { owner: owner || DEFAULT_OWNER, repo: repo || DEFAULT_REPO };
+            }
+            return { owner: DEFAULT_OWNER, repo: DEFAULT_REPO };
+        }
+
+        function formaterTitreDepuisFichier(nomFichier) {
+            if (DESCRIPTIONS_CONNUES[nomFichier]) {
+                return DESCRIPTIONS_CONNUES[nomFichier].titre;
+            }
+            const sansExt = nomFichier.replace(/\.html?$/i, "");
+            return sansExt
+                .replace(/[_-]+/g, " ")
+                .replace(/([a-z])([A-Z])/g, "$1 $2")
+                .trim();
+        }
+
+        function formaterDescriptionDepuisFichier(nomFichier) {
+            if (DESCRIPTIONS_CONNUES[nomFichier]) {
+                return DESCRIPTIONS_CONNUES[nomFichier].desc;
+            }
+            return "Page HTML détectée dans le dépôt";
+        }
+
+        function afficherPages(listeFichiers, modeSecours) {
+            const grille = document.getElementById("navGrid");
+            const badgeStatut = document.getElementById("badgeStatut");
+
+            if (!listeFichiers || listeFichiers.length === 0) {
+                grille.innerHTML = "<div class='status-card'>Aucune page HTML trouvée dans ce dépôt.</div>";
+                badgeStatut.textContent = "0 page détectée";
+                return;
+            }
+
+            const total = listeFichiers.length;
+            const libelle = total > 1 ? total + " pages détectées" : total + " page détectée";
+            badgeStatut.textContent = modeSecours ? libelle + " (mode secours)" : libelle;
+
+            grille.innerHTML = "";
+
+            listeFichiers.forEach((nomFichier, index) => {
+                const num = String(index + 1).padStart(2, "0");
+                const titre = formaterTitreDepuisFichier(nomFichier);
+                const desc = formaterDescriptionDepuisFichier(nomFichier);
+
+                const lien = document.createElement("a");
+                lien.className = "nav-btn";
+                lien.href = encodeURI(nomFichier);
+
+                const spanNum = document.createElement("span");
+                spanNum.className = "nav-num";
+                spanNum.textContent = "Page " + num;
+
+                const spanTitre = document.createElement("span");
+                spanTitre.className = "nav-title";
+                spanTitre.textContent = titre;
+
+                const spanDesc = document.createElement("span");
+                spanDesc.className = "nav-desc";
+                spanDesc.textContent = desc;
+
+                const spanFile = document.createElement("span");
+                spanFile.className = "nav-file";
+                spanFile.textContent = nomFichier;
+
+                lien.appendChild(spanNum);
+                lien.appendChild(spanTitre);
+                lien.appendChild(spanDesc);
+                lien.appendChild(spanFile);
+
+                grille.appendChild(lien);
+            });
+        }
+
+        async function chargerPagesDuDepot() {
+            const { owner, repo } = detecterDepotGitHub();
+            document.getElementById("badgeRepo").textContent = owner + "/" + repo;
+
+            const apiUrl = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/`;
+
+            try {
+                const reponse = await fetch(apiUrl, {
+                    headers: { "Accept": "application/vnd.github.v3+json" }
+                });
+                if (!reponse.ok) throw new Error("HTTP " + reponse.status);
+
+                const contenu = await reponse.json();
+                if (!Array.isArray(contenu)) throw new Error("Format inattendu");
+
+                const pagesHTML = contenu
+                    .filter(item =>
+                        item &&
+                        item.type === "file" &&
+                        /\.html?$/i.test(item.name) &&
+                        item.name.toLowerCase() !== "index.html"
+                    )
+                    .map(item => item.name)
+                    .sort((a, b) => a.localeCompare(b, "fr", { sensitivity: "base" }));
+
+                afficherPages(pagesHTML, false);
+            } catch (err) {
+                afficherPages(PAGES_SECOURS, true);
+            }
+        }
+
+        chargerPagesDuDepot();
+    </script>
 
 </body>
 </html>
