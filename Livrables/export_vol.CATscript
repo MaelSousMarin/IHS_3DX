@@ -1,0 +1,153 @@
+Sub CATMain()
+    On Error Resume Next
+
+    Dim oEditor
+    Set oEditor = CATIA.ActiveEditor
+    If oEditor Is Nothing Then
+        MsgBox "Aucun onglet actif trouvé dans CATIA.", vbCritical, "Erreur"
+        Exit Sub
+    End If
+
+    ' --- ÉTAPE 1 : Cibler la VPMReference (test_mat1 A) ---
+    Dim oRefPLM
+    Set oRefPLM = Nothing
+
+    Dim oProdService
+    Set oProdService = oEditor.GetService("PLMProductService")
+    If Not oProdService Is Nothing Then
+        If Not oProdService.RootOccurrence Is Nothing Then
+            Set oRefPLM = oProdService.RootOccurrence.Reference
+        End If
+        If oRefPLM Is Nothing Then
+            Set oRefPLM = oProdService.EditedContent.Item(1)
+        End If
+    End If
+
+    Dim oSel
+    Set oSel = oEditor.Selection
+    If oRefPLM Is Nothing And Not oSel Is Nothing Then
+        If oSel.Count > 0 Then
+            Set oRefPLM = oSel.Item(1).Value
+        End If
+    End If
+
+    Dim sMasse, sVolume, sMat
+    sMasse = "Non trouvée"
+    sVolume = "Non trouvé"
+    sMat = "Non trouvé"
+
+    ' --- ÉTAPE 2 : Récupérer l'objet Part via le Père du Corps principal ---
+    Dim oPart
+    Set oPart = Nothing
+
+    If Not oSel Is Nothing Then
+        oSel.Clear
+        ' En CATIA FR, le Corps principal est toujours trouvé et son Parent/ Père remonte au Part !
+        oSel.Search "Name='Corps principal' + Name='PartBody',all"
+        If oSel.Count > 0 Then
+            Dim oObj
+            Set oObj = oSel.Item(1).Value
+            Do While Not oObj Is Nothing
+                If TypeName(oObj) = "Part" Then
+                    Set oPart = oObj
+                    Exit Do
+                End If
+                If TypeName(oObj) = "Application" Or oObj.Name = oObj.Parent.Name Then Exit Do
+                Set oObj = oObj.Parent
+            Loop
+        End If
+        oSel.Clear
+    End If
+
+    ' Si oPart est trouvé, on lit tous ses paramètres (Volume, Masse, etc.)
+    If Not oPart Is Nothing Then
+        Dim p
+        For Each p In oPart.Parameters
+            Dim pNom, pVal
+            pNom = LCase(p.Name)
+            pVal = p.ValueAsString
+            If InStr(pNom, "masse") > 0 Or InStr(pNom, "mass") > 0 Then
+                If pVal <> "" Then sMasse = pVal
+            ElseIf InStr(pNom, "volume") > 0 Then
+                If pVal <> "" Then sVolume = pVal
+            End If
+        Next
+    End If
+
+    ' --- ÉTAPE 3 : Secours direct par recherche sur les paramètres Volume et Masse ---
+    If (sMasse = "Non trouvée" Or sVolume = "Non trouvé") And Not oSel Is Nothing Then
+        Dim i
+        oSel.Clear
+        oSel.Search "Name=*Masse* + Name=*Volume*,all"
+        For i = 1 To oSel.Count
+            Dim oItem
+            Set oItem = oSel.Item(i).Value
+            Dim sItemNom, sItemVal
+            sItemNom = LCase(oItem.Name)
+            Err.Clear
+            sItemVal = oItem.ValueAsString
+            If Err.Number = 0 And sItemVal <> "" Then
+                If InStr(sItemNom, "masse") > 0 And sMasse = "Non trouvée" Then sMasse = sItemVal
+                If InStr(sItemNom, "volume") > 0 And sVolume = "Non trouvé" Then sVolume = sItemVal
+            End If
+        Next
+        oSel.Clear
+    End If
+
+    ' --- ÉTAPE 4 : Lire le vrai nom du matériau ("Wrought Stainless Steel") ---
+    If Not oSel Is Nothing Then
+        oSel.Clear
+        oSel.Search "Name=*Rendering* + Name=*Steel* + Name=*Material*,all"
+        For i = 1 To oSel.Count
+            Dim oMatObj, sCand
+            Set oMatObj = oSel.Item(i).Value
+            sCand = ""
+
+            ' Essai 1 : Attribut PLM V_Name
+            Err.Clear
+            sCand = oMatObj.GetAttributeValue("V_Name")
+
+            ' Essai 2 : Nom de l'objet dans l'arbre (en ignorant CATIAAppliedMaterial0)
+            If sCand = "" Then sCand = oMatObj.Name
+
+            If sCand <> "" And InStr(sCand, "CATIAAppliedMaterial") = 0 Then
+                sCand = Replace(sCand, " - Rendering", "")
+                If InStr(sCand, "(") > 0 Then
+                    sCand = Trim(Left(sCand, InStr(sCand, "(") - 1))
+                End If
+                sMat = sCand
+                Exit For
+            End If
+        Next
+        oSel.Clear
+    End If
+
+    ' --- ÉTAPE 5 : Écriture dans la VPMReference (Description & Commentaire de révision) ---
+    Dim sTextePLM
+    sTextePLM = "Masse : " & sMasse & vbLf & "Volume : " & sVolume & vbLf & "Materiau : " & sMat
+
+    Err.Clear
+    Dim bEcritureOK
+    bEcritureOK = False
+
+    If Not oRefPLM Is Nothing Then
+        oRefPLM.SetAttributeValue "V_description", sTextePLM
+        oRefPLM.SetAttributeValue "V_versionComment", sTextePLM
+        If Err.Number = 0 Then bEcritureOK = True
+    End If
+
+    ' Copie dans le presse-papiers de la VM pour un Ctrl+V instantané si besoin
+    Dim oHTML
+    Set oHTML = CreateObject("htmlfile")
+    If Not oHTML Is Nothing Then
+        oHTML.ParentWindow.ClipboardData.SetData "text", sTextePLM
+    End If
+
+    MsgBox "=== RÉSULTAT LECTURE ARBRE ===" & vbCrLf & _
+           sTextePLM & vbCrLf & vbCrLf & _
+           "=== ÉCRITURE PLM ===" & vbCrLf & _
+           "Objet Part trouvé : " & TypeName(oPart) & vbCrLf & _
+           "Objet PLM trouvé : " & TypeName(oRefPLM) & vbCrLf & _
+           "Écriture réussie : " & bEcritureOK & vbCrLf & vbCrLf & _
+           "(Le texte est aussi copié dans ton presse-papiers Windows : fais Ctrl+V si besoin !)", vbInformation, "Diagnostic Macro PLM v3"
+End Sub
