@@ -1,0 +1,461 @@
+Sub CATMain()
+    On Error Resume Next
+
+    Dim oEditor
+    Set oEditor = CATIA.ActiveEditor
+    If oEditor Is Nothing Then
+        MsgBox "Ouvre d'abord ton assemblage dans CATIA.", vbCritical, "Erreur"
+        Exit Sub
+    End If
+
+    Dim oSel
+    Set oSel = oEditor.Selection
+
+    ' --- ÉTAPE 1 : Services PLM, Matériaux & Inertie + Produit Père ---
+    Dim oProdService, oMatService, oInertService, oRootOcc, oRootRefPLM
+    Set oProdService = oEditor.GetService("PLMProductService")
+    Set oMatService = CATIA.GetSessionService("MATPLMService")
+    Set oInertService = oEditor.GetService("InertiaService")
+    Set oRootOcc = Nothing
+    Set oRootRefPLM = Nothing
+
+    If Not oProdService Is Nothing Then
+        Set oRootOcc = oProdService.RootOccurrence
+        If Not oRootOcc Is Nothing Then
+            Err.Clear
+            Set oRootRefPLM = oRootOcc.ReferenceRootOccurrenceOf
+            If oRootRefPLM Is Nothing Then Set oRootRefPLM = oRootOcc.Reference
+            If oRootRefPLM Is Nothing Then Set oRootRefPLM = oRootOcc.ReferenceInstanceOf
+        End If
+        If oRootRefPLM Is Nothing Then
+            Err.Clear
+            Set oRootRefPLM = oProdService.EditedContent.Item(1)
+        End If
+    End If
+
+    ' --- ÉTAPE 2 : Passage en mode Édition + Indexation des VPMReference ---
+    oSel.Clear
+    If Not oRootOcc Is Nothing Then
+        oSel.Add oRootOcc
+        CATIA.StartCommand "Passer en mode Edition"
+    End If
+
+    oSel.Clear
+    oSel.Search "Type=VPMReference,all"
+    Dim nbSearchPLM, tabSearchPLM(), i
+    nbSearchPLM = oSel.Count
+    ReDim tabSearchPLM(nbSearchPLM)
+    For i = 1 To nbSearchPLM
+        Set tabSearchPLM(i) = oSel.Item(i).Value
+    Next
+
+    If nbSearchPLM > 0 Then
+        CATIA.StartCommand "Passer en mode Edition"
+    End If
+    oSel.Clear
+
+    If oRootRefPLM Is Nothing And nbSearchPLM >= 1 Then
+        Set oRootRefPLM = tabSearchPLM(1)
+    End If
+
+    Dim dictOccByNorm, dictRefByNorm
+    Set dictOccByNorm = CreateObject("Scripting.Dictionary")
+    Set dictRefByNorm = CreateObject("Scripting.Dictionary")
+
+    For i = 1 To nbSearchPLM
+        Dim oItemPLM, oVraieRef, oInst, sNomItem, sNormItem
+        Set oItemPLM = tabSearchPLM(i)
+        Set oVraieRef = Nothing
+
+        If TypeName(oItemPLM) = "VPMReference" Then
+            Set oVraieRef = oItemPLM
+        Else
+            Err.Clear
+            Set oInst = oItemPLM.InstanceOccurrenceOf
+            If Not oInst Is Nothing Then Set oVraieRef = oInst.ReferenceInstanceOf
+            If oVraieRef Is Nothing Then
+                Err.Clear
+                Set oVraieRef = oItemPLM.ReferenceRootOccurrenceOf
+            End If
+            If oVraieRef Is Nothing Then
+                Err.Clear
+                Set oVraieRef = oItemPLM.Reference
+            End If
+        End If
+
+        sNomItem = ""
+        If Not oVraieRef Is Nothing Then
+            Err.Clear
+            sNomItem = oVraieRef.GetAttributeValue("V_Name")
+            If sNomItem = "" Then sNomItem = oVraieRef.Name
+        End If
+        If sNomItem = "" Then
+            Err.Clear
+            sNomItem = oItemPLM.GetAttributeValue("V_Name")
+            If sNomItem = "" Then sNomItem = oItemPLM.Name
+        End If
+
+        sNormItem = NormaliserNom(sNomItem)
+        If sNormItem <> "" Then
+            If Not dictOccByNorm.Exists(sNormItem) Then dictOccByNorm.Add sNormItem, oItemPLM
+            If Not oVraieRef Is Nothing And Not dictRefByNorm.Exists(sNormItem) Then
+                dictRefByNorm.Add sNormItem, oVraieRef
+            End If
+        End If
+    Next
+
+    ' --- ÉTAPE 3 : Récupérer les pièces chargées ---
+    oSel.Clear
+    oSel.Search "Name=*Imported* + Name='Corps principal' + Name='PartBody' + Name='Plan xy',all"
+    Dim nbObj
+    nbObj = oSel.Count
+
+    If nbObj = 0 Then
+        MsgBox "Aucune géométrie trouvée en mode Édition." & vbCrLf & _
+               "Clic droit sur l'assemblage racine -> 'Passer en mode Edition', puis relance.", _
+               vbExclamation, "Mode Visualisation actif"
+        Exit Sub
+    End If
+
+    Dim tabObj()
+    ReDim tabObj(nbObj)
+    For i = 1 To nbObj
+        Set tabObj(i) = oSel.Item(i).Value
+    Next
+    oSel.Clear
+
+    ' --- ÉTAPE 4 : Tri matériau + Mesure d'inertie automatique + Format compact ---
+    Dim dictParts
+    Set dictParts = CreateObject("Scripting.Dictionary")
+
+    Dim iRetenues, iIgnorees, sRecap, sCommentaireGlobal
+    iRetenues = 0
+    iIgnorees = 0
+    sRecap = ""
+    sCommentaireGlobal = ""
+
+    For i = 1 To nbObj
+        Dim oCurr, oPart
+        Set oCurr = tabObj(i)
+        Set oPart = Nothing
+
+        Dim sec
+        For sec = 1 To 12
+            If oCurr Is Nothing Then Exit For
+            If TypeName(oCurr) = "Part" Then
+                Set oPart = oCurr
+                Exit For
+            End If
+            Set oCurr = oCurr.Parent
+        Next
+
+        If Not oPart Is Nothing Then
+            Dim sNormPart
+            sNormPart = NormaliserNom(oPart.Name)
+
+            If sNormPart <> "" And Not dictParts.Exists(sNormPart) Then
+                dictParts.Add sNormPart, True
+
+                Dim oOccPiece, oRefPiece
+                Set oOccPiece = Nothing
+                Set oRefPiece = Nothing
+                If dictOccByNorm.Exists(sNormPart) Then Set oOccPiece = dictOccByNorm(sNormPart)
+                If dictRefByNorm.Exists(sNormPart) Then Set oRefPiece = dictRefByNorm(sNormPart)
+
+                ' 1. Détection du Matériau appliqué
+                Dim sMat
+                sMat = DetecterMateriauPiece(oSel, oMatService, oProdService, oOccPiece, oRefPiece, oPart)
+
+                If sMat = "" Then
+                    iIgnorees = iIgnorees + 1
+                Else
+                    Dim sMasse, sVolume
+                    sMasse = "-"
+                    sVolume = "-"
+
+                    ' 2A. Lecture des paramètres fx déjà présents dans le Part
+                    Dim p
+                    For Each p In oPart.Parameters
+                        Dim pNom, pVal
+                        pNom = LCase(p.Name)
+                        Err.Clear
+                        pVal = p.ValueAsString
+                        If Err.Number = 0 And pVal <> "" Then
+                            If InStr(pNom, "masse") > 0 Or InStr(pNom, "mass") > 0 Then
+                                sMasse = pVal
+                            ElseIf InStr(pNom, "volume") > 0 And pVal <> "0m3" And pVal <> "0cm3" Then
+                                sVolume = pVal
+                            End If
+                        End If
+                    Next
+
+                    ' 2B. Calcul d'inertie automatique (InertiaService / Inertia) si absent
+                    If sMasse = "-" Or sVolume = "-" Then
+                        CalculerInertiePiece oInertService, oOccPiece, oRefPiece, oPart, sMasse, sVolume
+                    End If
+
+                    ' 3. Nom raccourci pour rester sous les 255 caractères d'ENOVIA
+                    Dim sNomCourt
+                    sNomCourt = oPart.Name
+                    If Not oRefPiece Is Nothing Then
+                        Err.Clear
+                        Dim sVName
+                        sVName = oRefPiece.GetAttributeValue("V_Name")
+                        If sVName <> "" Then sNomCourt = sVName
+                    End If
+                    sNomCourt = Replace(sNomCourt, "mael_Original ultimakerCS_", "")
+                    If Len(sNomCourt) > 2 And Right(sNomCourt, 2) = " A" Then
+                        sNomCourt = Left(sNomCourt, Len(sNomCourt) - 2)
+                    End If
+                    sNomCourt = Trim(sNomCourt)
+
+                    ' Format compact : Nom|Masse|Volume|Materiau
+                    iRetenues = iRetenues + 1
+                    Dim sLignePiece
+                    sLignePiece = sNomCourt & "|" & sMasse & "|" & sVolume & "|" & sMat
+
+                    If sCommentaireGlobal = "" Then
+                        sCommentaireGlobal = sLignePiece
+                    Else
+                        sCommentaireGlobal = sCommentaireGlobal & vbLf & sLignePiece
+                    End If
+
+                    sRecap = sRecap & "• " & sLignePiece & vbCrLf
+                End If
+            End If
+        End If
+    Next
+
+    ' --- ÉTAPE 5 : Écriture centralisée dans le Produit Père ---
+    Dim bEcritDesc, bEcritComm, sErrDesc, sErrComm, sNomPere
+    bEcritDesc = False
+    bEcritComm = False
+    sErrDesc = "Aucune pièce avec matériau"
+    sErrComm = "Aucune pièce avec matériau"
+    sNomPere = "Introuvable"
+
+    If Not oRootRefPLM Is Nothing Then
+        Err.Clear
+        sNomPere = oRootRefPLM.GetAttributeValue("V_Name")
+        If sNomPere = "" Then sNomPere = oRootRefPLM.Name
+
+        If iRetenues > 0 Then
+            Err.Clear
+            oRootRefPLM.SetAttributeValue "V_description", sCommentaireGlobal
+            If Err.Number = 0 Then
+                bEcritDesc = True
+                sErrDesc = "OK"
+            Else
+                sErrDesc = "Err " & Err.Number
+            End If
+
+            Err.Clear
+            oRootRefPLM.SetAttributeValue "V_versionComment", sCommentaireGlobal
+            If Err.Number = 0 Then
+                bEcritComm = True
+                sErrComm = "OK"
+            Else
+                sErrComm = "Err " & Err.Number
+            End If
+        End If
+    End If
+
+    ' Copie presse-papiers par sécurité
+    Dim oHTML
+    Set oHTML = CreateObject("htmlfile")
+    If Not oHTML Is Nothing Then
+        oHTML.ParentWindow.ClipboardData.SetData "text", sCommentaireGlobal
+    End If
+
+    MsgBox "=== PRODUIT PÈRE v8c (TRI MATÉRIAU + INERTIE) ===" & vbCrLf & _
+           "Produit Père : " & sNomPere & vbCrLf & _
+           "Service Inertie : " & TypeName(oInertService) & vbCrLf & _
+           "Pièces retenues : " & iRetenues & " | Ignorées : " & iIgnorees & vbCrLf & _
+           "Longueur totale : " & Len(sCommentaireGlobal) & " / 255 car." & vbCrLf & _
+           "V_description : " & bEcritDesc & " (" & sErrDesc & ")" & vbCrLf & _
+           "V_versionComment : " & bEcritComm & " (" & sErrComm & ")" & vbCrLf & vbCrLf & _
+           "Pièces écrites :" & vbCrLf & sRecap & vbCrLf & _
+           "--> Fais Ctrl+S pour enregistrer dans ENOVIA !", _
+           vbInformation, "Macro Assemblage Père v8c"
+End Sub
+
+' --- Mesure d'inertie automatique (Masse & Volume) sur une pièce retenue ---
+Sub CalculerInertiePiece(oInertService, oOcc, oRef, oPart, ByRef sMasse, ByRef sVolume)
+    On Error Resume Next
+
+    Dim oInert, dMass, dVol
+    Set oInert = Nothing
+
+    ' 1. Voie officielle 3DEXPERIENCE : InertiaService.GetInertiaElement
+    If Not oInertService Is Nothing Then
+        If Not oOcc Is Nothing Then
+            Err.Clear
+            Set oInert = oInertService.GetInertiaElement(oOcc)
+        End If
+        If oInert Is Nothing And Not oRef Is Nothing Then
+            Err.Clear
+            Set oInert = oInertService.GetInertiaElement(oRef)
+        End If
+    End If
+
+    ' 2. Secours via GetItem("Inertia")
+    If oInert Is Nothing And Not oOcc Is Nothing Then
+        Err.Clear
+        Set oInert = oOcc.GetItem("Inertia")
+    End If
+    If oInert Is Nothing And Not oRef Is Nothing Then
+        Err.Clear
+        Set oInert = oRef.GetItem("Inertia")
+    End If
+
+    If Not oInert Is Nothing Then
+        ' Lecture Masse (en kg par défaut -> convertie en g si < 1 kg)
+        If sMasse = "-" Then
+            dMass = 0
+            Err.Clear
+            dMass = oInert.Mass
+            If Err.Number <> 0 Or dMass <= 0 Then
+                Err.Clear
+                dMass = oInert.GetMass()
+            End If
+            If Err.Number = 0 And dMass > 0 Then
+                If dMass < 1 Then
+                    sMasse = Replace(CStr(Round(dMass * 1000, 2)), ",", ".") & "g"
+                Else
+                    sMasse = Replace(CStr(Round(dMass, 3)), ",", ".") & "kg"
+                End If
+            End If
+        End If
+
+        ' Lecture Volume (en m3 par défaut -> converti en cm3 pour compacité)
+        If sVolume = "-" Then
+            dVol = 0
+            Err.Clear
+            dVol = oInert.Volume
+            If Err.Number <> 0 Or dVol <= 0 Then
+                Err.Clear
+                dVol = oInert.GetVolume()
+            End If
+            If Err.Number = 0 And dVol > 0 Then
+                sVolume = Replace(CStr(Round(dVol * 1000000, 2)), ",", ".") & "cm3"
+            End If
+        End If
+    End If
+
+    ' 3. Secours géométrique (smartVolume) si InertiaService n'a pas renvoyé le volume
+    If sVolume = "-" And Not oPart Is Nothing Then
+        Dim oCorps
+        Set oCorps = Nothing
+        Err.Clear
+        Set oCorps = oPart.MainBody
+        If oCorps Is Nothing And oPart.Bodies.Count > 0 Then Set oCorps = oPart.Bodies.Item(1)
+
+        If Not oCorps Is Nothing Then
+            Err.Clear
+            Dim oParamVol, oRelVol, sCheminCorps
+            Set oParamVol = oPart.Parameters.CreateDimension("Volume_Auto", "VOLUME", 0)
+            sCheminCorps = oPart.Parameters.GetNameToUseInRelation(oCorps)
+            If sCheminCorps = "" Then sCheminCorps = "`" & oCorps.Name & "`"
+
+            Set oRelVol = oPart.Relations.CreateFormula("Formule_Vol_Auto", "", oParamVol, "smartVolume(" & sCheminCorps & ")")
+            oPart.UpdateObject oRelVol
+            If Err.Number = 0 And oParamVol.Value > 0 Then
+                ' oParamVol.Value est en m3 -> conversion en cm3
+                sVolume = Replace(CStr(Round(oParamVol.Value * 1000000, 2)), ",", ".") & "cm3"
+            End If
+
+            oPart.Relations.Remove "Formule_Vol_Auto"
+            oPart.Parameters.Remove "Volume_Auto"
+        End If
+    End If
+End Sub
+
+' --- Détecte le matériau appliqué via MATPLMService, puis secours *Rendering* ---
+Function DetecterMateriauPiece(oSel, oMatService, oProdService, oOcc, oRef, oPart)
+    On Error Resume Next
+    DetecterMateriauPiece = ""
+
+    If Not oMatService Is Nothing Then
+        Dim oMatRef, oAppMat, oLink, oRepInst, oNull
+        Set oMatRef = Nothing
+        Set oAppMat = Nothing
+        Set oNull = Nothing
+
+        If Not oRef Is Nothing Then
+            Err.Clear
+            oMatService.GetMaterialCore oRef, oMatRef, oAppMat
+        End If
+        If oMatRef Is Nothing And Not oProdService Is Nothing And Not oRef Is Nothing Then
+            Err.Clear
+            Set oLink = oProdService.ComposeLink(oNull, oNull, oRef)
+            If Not oLink Is Nothing Then
+                Err.Clear
+                oMatService.GetMaterialCore oLink, oMatRef, oAppMat
+            End If
+        End If
+        If oMatRef Is Nothing And Not oProdService Is Nothing And Not oRef Is Nothing Then
+            Err.Clear
+            If oRef.RepInstances.Count > 0 Then
+                Set oRepInst = oRef.RepInstances.Item(1)
+                Set oLink = oProdService.ComposeLink(oNull, oRepInst, oNull)
+                If Not oLink Is Nothing Then
+                    Err.Clear
+                    oMatService.GetMaterialCore oLink, oMatRef, oAppMat
+                End If
+            End If
+        End If
+        If oMatRef Is Nothing And Not oOcc Is Nothing Then
+            Err.Clear
+            oMatService.GetMaterialCore oOcc, oMatRef, oAppMat
+        End If
+        If oMatRef Is Nothing And Not oPart Is Nothing Then
+            Err.Clear
+            oMatService.GetMaterialCore oPart, oMatRef, oAppMat
+        End If
+
+        If Not oMatRef Is Nothing Then
+            Dim sNomCore
+            sNomCore = ""
+            Err.Clear
+            sNomCore = oMatRef.GetAttributeValue("V_Name")
+            If sNomCore = "" Then sNomCore = oMatRef.Name
+            If sNomCore <> "" Then
+                DetecterMateriauPiece = Trim(CStr(sNomCore))
+                Exit Function
+            End If
+        End If
+    End If
+
+    Dim oCible, k, sCand
+    For k = 1 To 2
+        If k = 1 Then Set oCible = oRef Else Set oCible = oPart
+        If Not oCible Is Nothing Then
+            oSel.Clear
+            oSel.Add oCible
+            Err.Clear
+            oSel.Search "Name=*Rendering*,in"
+            If Err.Number = 0 And oSel.Count > 0 Then
+                sCand = oSel.Item(1).Value.Name
+                If InStr(LCase(sCand), "rendering") > 0 Then
+                    DetecterMateriauPiece = Trim(Replace(sCand, " - Rendering", ""))
+                    oSel.Clear
+                    Exit Function
+                End If
+            End If
+            oSel.Clear
+        End If
+    Next
+End Function
+
+' --- Normalise un nom CATIA/PLM ---
+Function NormaliserNom(sTexte)
+    Dim s
+    s = Trim(CStr(sTexte))
+    If InStr(s, " (") > 0 Then
+        s = Trim(Left(s, InStr(s, " (") - 1))
+    End If
+    If Len(s) > 2 And Right(s, 2) = " A" Then
+        s = Trim(Left(s, Len(s) - 2))
+    End If
+    NormaliserNom = LCase(s)
+End Function
