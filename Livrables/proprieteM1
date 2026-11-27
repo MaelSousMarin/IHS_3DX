@@ -1,0 +1,1668 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IHS Passeport Numérique (Méthode 1) — 3DEXPERIENCE</title>
+    <style>
+        :root {
+            /* Charte Graphique Dassault Systèmes (3DS) - Thème Clair Uni */
+            --ds-blue-dark: #002C4B;
+            --ds-blue-primary: #005386;
+            --ds-blue-light: #0076BA;
+            
+            /* Neutres & Fonds */
+            --bg-main: #F5F5F7;
+            --bg-card: #FFFFFF;
+            --bg-pill-bar: #E5E8ED;
+            --bg-input: #F0F2F5;
+            --text-main: #1D1D1F;
+            --text-muted: #6E6E73;
+
+            /* Couleurs fonctionnelles */
+            --success: #28894B;
+            --warning: #E67E22;
+            --danger: #D12F2F;
+
+            /* Ombres douces (sans aucune bordure) */
+            --shadow-soft: 0 4px 14px rgba(0, 0, 0, 0.04);
+            --shadow-hover: 0 10px 22px rgba(0, 44, 75, 0.12);
+        }
+
+        /* Reset global et police 3DS avec fallbacks système */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: '3ds', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            padding: 16px;
+            overflow-x: hidden;
+        }
+
+        /* =========================================================
+           1. EN-TÊTE ÉPURÉ UNI (SANS BORDURE)
+           ========================================================= */
+        .header {
+            background: var(--bg-card);
+            padding: 18px 22px;
+            border-radius: 18px;
+            border: none;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            box-shadow: var(--shadow-soft);
+        }
+
+        .piece-title-box {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .ref-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .ref-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .ref-item strong {
+            color: var(--ds-blue-primary);
+            font-weight: 700;
+        }
+
+        .cad-value {
+            font-family: Consolas, monospace;
+            background: var(--bg-input);
+            padding: 3px 10px;
+            border-radius: 8px;
+            border: none;
+            font-size: 12px;
+            color: var(--text-main);
+            word-break: break-all;
+        }
+
+        .plm-dot {
+            font-size: 12px;
+            color: var(--ds-blue-primary);
+            font-weight: 600;
+        }
+
+        .piece-title-box h1 {
+            font-size: 20px;
+            color: var(--text-main);
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+
+        .status-badge {
+            padding: 8px 16px;
+            border-radius: 999px;
+            font-size: 12.5px;
+            font-weight: 700;
+            background: var(--bg-input);
+            color: var(--text-main);
+            border: none;
+        }
+
+        /* =========================================================
+           2. BARRE D'ONGLETS EN PILULE (STYLE CAPSULE SANS BORDURE)
+           ========================================================= */
+        .tabs-pill-container {
+            background: var(--bg-pill-bar);
+            padding: 5px;
+            border-radius: 999px;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+            margin-bottom: 18px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px 12px;
+            background: transparent;
+            color: var(--text-main);
+            border: none;
+            outline: none;
+            border-radius: 999px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13.5px;
+            text-align: center;
+            transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .tab-btn:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.6);
+            transform: scale(1.02);
+        }
+
+        .tab-btn.active {
+            background: var(--ds-blue-primary);
+            color: #FFFFFF;
+            box-shadow: 0 2px 8px rgba(0, 83, 134, 0.25);
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* =========================================================
+           2B. SÉLECTEUR BINAIRE RÉFÉRENCE / INSTANCE (STYLE PILULE)
+           ========================================================= */
+        .scope-block {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .scope-label {
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .scope-pill-container {
+            background: var(--bg-pill-bar);
+            padding: 4px;
+            border-radius: 999px;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .scope-btn {
+            flex: 1;
+            padding: 9px 14px;
+            background: transparent;
+            color: var(--text-main);
+            border: none;
+            outline: none;
+            border-radius: 999px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            text-align: center;
+            transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .scope-btn:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.6);
+            transform: scale(1.02);
+        }
+
+        .scope-btn.active {
+            background: var(--ds-blue-primary);
+            color: #FFFFFF;
+            box-shadow: 0 2px 8px rgba(0, 83, 134, 0.25);
+        }
+
+        .scope-target-preview {
+            font-size: 12px;
+            color: var(--text-muted);
+            background: var(--bg-input);
+            padding: 7px 12px;
+            border-radius: 10px;
+            word-break: break-word;
+        }
+
+        .scope-target-preview strong {
+            color: var(--ds-blue-primary);
+        }
+
+        /* =========================================================
+           3. INDICATEURS CLÉS UNIS (4 CARTES SANS BORDURE)
+           ========================================================= */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(115px, 1fr));
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .metric-card {
+            background: var(--bg-card);
+            padding: 12px 10px;
+            border-radius: 14px;
+            border: none;
+            text-align: center;
+            box-shadow: var(--shadow-soft);
+        }
+
+        .metric-card .label {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.4px;
+        }
+
+        .metric-card .value {
+            font-size: 14.5px;
+            font-weight: 700;
+            margin-top: 4px;
+            color: var(--ds-blue-primary);
+        }
+
+        /* =========================================================
+           4. BOUTONS CRITÈRES COMPACTS
+           ========================================================= */
+        .criteria-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(115px, 1fr));
+            gap: 9px;
+            margin-bottom: 16px;
+        }
+
+        .crit-btn {
+            background: var(--bg-card);
+            border: none;
+            outline: none;
+            padding: 11px 12px;
+            border-radius: 14px;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            box-shadow: var(--shadow-soft);
+            transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
+                        background-color 0.22s ease,
+                        box-shadow 0.22s ease,
+                        color 0.22s ease;
+        }
+
+        .crit-btn:hover {
+            transform: scale(1.04);
+            box-shadow: var(--shadow-hover);
+            z-index: 2;
+        }
+
+        .crit-btn.active {
+            background: var(--ds-blue-primary);
+            box-shadow: 0 6px 16px rgba(0, 83, 134, 0.28);
+        }
+
+        .crit-btn .crit-num {
+            font-size: 10px;
+            color: var(--text-muted);
+            font-weight: 600;
+            transition: color 0.2s ease;
+        }
+
+        .crit-btn .crit-name {
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1.25;
+            color: var(--ds-blue-primary);
+            transition: color 0.2s ease;
+        }
+
+        .crit-btn.active .crit-num {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .crit-btn.active .crit-name {
+            color: #FFFFFF;
+        }
+
+        /* =========================================================
+           5. ZONE DE DÉTAIL DU CRITÈRE (UNIE SANS BORDURE)
+           ========================================================= */
+        .detail-box {
+            background: var(--bg-card);
+            border: none;
+            border-radius: 18px;
+            padding: 18px 20px;
+            min-height: 110px;
+            box-shadow: var(--shadow-soft);
+        }
+
+        .detail-box h3 {
+            color: var(--ds-blue-primary);
+            font-size: 15px;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .detail-box p {
+            font-size: 13.5px;
+            line-height: 1.6;
+            white-space: pre-line;
+            color: var(--text-main);
+        }
+
+        /* =========================================================
+           6. ONGLET DIAGNOSTIC & ONGLET BLOC-NOTE
+           ========================================================= */
+        .diag-section {
+            background: var(--bg-card);
+            border: none;
+            border-radius: 18px;
+            padding: 16px 18px;
+            margin-bottom: 14px;
+            box-shadow: var(--shadow-soft);
+        }
+
+        .diag-section h3 {
+            color: var(--ds-blue-primary);
+            margin-bottom: 10px;
+            font-size: 14.5px;
+            font-weight: 700;
+        }
+
+        .alert-box {
+            background: #FEE2E2;
+            border: none;
+            color: #991B1B;
+            padding: 13px 16px;
+            border-radius: 14px;
+            margin-bottom: 14px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .steps-list {
+            padding-left: 20px;
+            line-height: 1.65;
+            font-size: 13.5px;
+        }
+
+        .state-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .state-btn {
+            flex: 1;
+            min-width: 90px;
+            padding: 11px 12px;
+            border: none;
+            outline: none;
+            border-radius: 999px;
+            font-weight: 700;
+            cursor: pointer;
+            color: #FFFFFF;
+            font-size: 12.5px;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+
+        .state-btn:hover {
+            transform: scale(1.03);
+            opacity: 0.92;
+        }
+
+        .btn-ok { background: var(--success); }
+        .btn-warn { background: var(--warning); }
+        .btn-err { background: var(--danger); }
+
+        /* Bloc-note */
+        .note-form {
+            background: var(--bg-card);
+            padding: 16px 18px;
+            border-radius: 18px;
+            border: none;
+            margin-bottom: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            box-shadow: var(--shadow-soft);
+        }
+
+        .note-form input, .note-form select, .note-form textarea {
+            width: 100%;
+            padding: 10px 13px;
+            border-radius: 12px;
+            border: none;
+            background: var(--bg-input);
+            color: var(--text-main);
+            font-size: 13px;
+            outline: none;
+        }
+
+        .note-form input:focus, .note-form select:focus, .note-form textarea:focus {
+            background: #E8ECF2;
+        }
+
+        /* Prévisualisation des captures collées */
+        .paste-preview-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .paste-preview-list:empty {
+            display: none;
+        }
+
+        .paste-thumb-wrap {
+            position: relative;
+            width: 92px;
+            height: 68px;
+            border-radius: 10px;
+            overflow: hidden;
+            background: var(--bg-input);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .paste-thumb {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            cursor: pointer;
+        }
+
+        .paste-remove-btn {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 22px;
+            height: 22px;
+            border-radius: 999px;
+            border: none;
+            background: rgba(29, 29, 31, 0.78);
+            color: #FFFFFF;
+            font-size: 13px;
+            font-weight: 700;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .paste-remove-btn:hover {
+            background: var(--danger);
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            background: var(--ds-blue-primary);
+            color: #FFFFFF;
+            border: none;
+            outline: none;
+            padding: 10px 16px;
+            border-radius: 999px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 12.5px;
+            transition: transform 0.2s ease, background-color 0.2s ease;
+        }
+
+        .action-btn:hover {
+            background: var(--ds-blue-light);
+            transform: scale(1.03);
+        }
+
+        .action-btn.secondary {
+            background: var(--bg-pill-bar);
+            color: var(--text-main);
+        }
+
+        .action-btn.secondary:hover {
+            background: #D5DAE2;
+        }
+
+        .notes-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .note-item {
+            background: var(--bg-card);
+            border: none;
+            padding: 14px 16px;
+            border-radius: 14px;
+            font-size: 13px;
+            box-shadow: var(--shadow-soft);
+        }
+
+        /* Animation d'apparition sur la nouvelle note (fondu + #E8F3FA -> blanc en 1,5 s) */
+        @keyframes nouvelleNoteFade {
+            0% {
+                opacity: 0;
+                transform: translateY(-6px);
+                background-color: #E8F3FA;
+            }
+            20% {
+                opacity: 1;
+                transform: translateY(0);
+                background-color: #E8F3FA;
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+                background-color: var(--bg-card);
+            }
+        }
+
+        .note-item.is-new {
+            animation: nouvelleNoteFade 1.5s ease-out forwards;
+        }
+
+        .note-item .note-meta {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            word-break: break-word;
+        }
+
+        .note-item .note-scope-badge {
+            display: inline-block;
+            color: #FFFFFF;
+            border: none;
+            padding: 3px 9px;
+            border-radius: 999px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            margin-right: 6px;
+        }
+
+        .note-scope-badge.scope-ref {
+            background: var(--ds-blue-dark);
+        }
+
+        .note-scope-badge.scope-inst {
+            background: var(--ds-blue-light);
+        }
+
+        .note-item .note-tag {
+            display: inline-block;
+            background: var(--ds-blue-primary);
+            color: #FFFFFF;
+            border: none;
+            padding: 3px 9px;
+            border-radius: 999px;
+            font-size: 10.5px;
+            font-weight: 700;
+            margin-right: 8px;
+        }
+
+        .note-images-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .note-thumb {
+            max-width: 140px;
+            max-height: 100px;
+            border-radius: 10px;
+            object-fit: cover;
+            cursor: zoom-in;
+            box-shadow: var(--shadow-soft);
+            transition: transform 0.2s ease;
+        }
+
+        .note-thumb:hover {
+            transform: scale(1.03);
+        }
+
+        /* Toast discret en bas du panneau (pilule sombre #002C4B, 2,5 s) */
+        .toast-pill {
+            position: fixed;
+            left: 50%;
+            bottom: 18px;
+            transform: translate(-50%, 14px);
+            background: var(--ds-blue-dark);
+            color: #FFFFFF;
+            padding: 10px 18px;
+            border-radius: 999px;
+            font-size: 12.5px;
+            font-weight: 600;
+            line-height: 1.3;
+            max-width: calc(100% - 32px);
+            text-align: center;
+            box-shadow: 0 8px 24px rgba(0, 44, 75, 0.28);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 9500;
+            transition: opacity 0.22s ease, transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .toast-pill.visible {
+            opacity: 1;
+            transform: translate(-50%, 0);
+        }
+
+        /* Visionneuse plein écran au clic sur une capture */
+        .lightbox-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.78);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 9999;
+            cursor: zoom-out;
+        }
+
+        .lightbox-overlay.open {
+            display: flex;
+        }
+
+        .lightbox-overlay img {
+            max-width: 95%;
+            max-height: 92vh;
+            border-radius: 12px;
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- EN-TÊTE -->
+    <div class="header">
+        <div class="piece-title-box">
+            <div class="ref-row">
+                <span class="ref-item">Réf : <strong id="badgeRef">#----</strong></span>
+                <span class="ref-item">Acteur : <span class="cad-value" id="badgeCAO">--</span></span>
+                <span class="plm-dot" id="statutPLM">PLM : En attente...</span>
+            </div>
+            <h1 id="nomPiece">Print Head Assembly</h1>
+        </div>
+        <div id="badgeEtat" class="status-badge">État : Non contrôlé</div>
+    </div>
+
+    <!-- BARRE D'ONGLETS EN PILULE -->
+    <div class="tabs-pill-container">
+        <button class="tab-btn active" onclick="changerOnglet('infos', this)">Passeport</button>
+        <button class="tab-btn" onclick="changerOnglet('diagnostic', this)">Diagnostic</button>
+        <button class="tab-btn" onclick="changerOnglet('notes', this)">Bloc-note</button>
+    </div>
+
+    <!-- ONGLET 1 : PASSEPORT (4 CARTES D'INDICATEURS) -->
+    <div id="tab-infos" class="tab-content active">
+        <div class="metrics-grid">
+            <div class="metric-card"><div class="label">N° Réf</div><div class="value" id="valRef">--</div></div>
+            <div class="metric-card"><div class="label">Masse CAO</div><div class="value" id="valPoids">--</div></div>
+            <div class="metric-card"><div class="label">Matériau CAO</div><div class="value" id="valMateriau">Standard</div></div>
+            <div class="metric-card"><div class="label">Indice</div><div class="value" id="valIndice">8.0 / 10</div></div>
+        </div>
+        <div class="criteria-grid" id="grilleCriteres"></div>
+        <div class="detail-box">
+            <h3 id="titreCritere">Sélectionnez un critère</h3>
+            <p id="texteCritere">--</p>
+        </div>
+    </div>
+
+    <!-- ONGLET 2 : DIAGNOSTIC -->
+    <div id="tab-diagnostic" class="tab-content">
+        <div class="alert-box" id="alerteSecurite">Consigne de sécurité : Vérifier la température et couper l'alimentation avant intervention.</div>
+        <div class="diag-section"><h3>Outillage requis</h3><p id="outilsRequis">Clé Allen 2.0 mm, Clé à douille 7 mm.</p></div>
+        <div class="diag-section"><h3>Gamme de démontage</h3><ol class="steps-list" id="listeEtapes"></ol></div>
+        <div class="diag-section">
+            <h3>Déclarer l'état</h3>
+            <div class="scope-block">
+                <div class="scope-label">Appliquer l'état à :</div>
+                <div class="scope-pill-container">
+                    <button type="button" class="scope-btn" data-scope="reference" onclick="definirPorteeCible('reference')">Référence</button>
+                    <button type="button" class="scope-btn active" data-scope="instance" onclick="definirPorteeCible('instance')">Instance</button>
+                </div>
+                <div class="scope-target-preview" id="apercuCibleDiag">Cible : --</div>
+            </div>
+            <div class="state-buttons">
+                <button class="state-btn btn-ok" onclick="definirEtat('Opérationnel', '#28894B')">Opérationnel</button>
+                <button class="state-btn btn-warn" onclick="definirEtat('Usé', '#E67E22')">Usé</button>
+                <button class="state-btn btn-err" onclick="definirEtat('À remplacer', '#D12F2F')">À remplacer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ONGLET 3 : BLOC-NOTE -->
+    <div id="tab-notes" class="tab-content">
+        <div class="note-form">
+            <div class="scope-block">
+                <div class="scope-label">Appliquer la note à :</div>
+                <div class="scope-pill-container">
+                    <button type="button" class="scope-btn" data-scope="reference" onclick="definirPorteeCible('reference')">Référence</button>
+                    <button type="button" class="scope-btn active" data-scope="instance" onclick="definirPorteeCible('instance')">Instance</button>
+                </div>
+                <div class="scope-target-preview" id="apercuCibleNote">Cible : --</div>
+            </div>
+            <input type="text" id="noteAuteur" placeholder="Nom de l'opérateur">
+            <select id="noteTag">
+                <option value="Observation">Observation</option>
+                <option value="Usure">Trace d'usure</option>
+                <option value="Commande SAV">Pièce à commander</option>
+            </select>
+            <textarea id="noteTexte" rows="3" placeholder="Votre observation... (Ctrl+V ou clic droit > Coller pour joindre une capture d'écran)"></textarea>
+            <div class="paste-preview-list" id="apercuImagesNote"></div>
+            <div class="btn-row">
+                <button class="action-btn" onclick="ajouterNote()">Enregistrer la note</button>
+                <button class="action-btn secondary" onclick="exporterWord()">Exporter Word (.doc)</button>
+            </div>
+        </div>
+        <div class="notes-list" id="listeNotes"></div>
+    </div>
+
+    <!-- TOAST DISCRET DE CONFIRMATION -->
+    <div id="toastFeedback" class="toast-pill" role="status" aria-live="polite"></div>
+
+    <!-- LIGHTBOX POUR AGRANDIR LES CAPTURES -->
+    <div id="lightboxModal" class="lightbox-overlay" onclick="fermerLightbox()">
+        <img id="lightboxImg" src="" alt="Capture agrandie">
+    </div>
+
+    <script>
+        /* =========================================================================
+           1. DONNÉES PLM 100 % AUTONOMES (SANS CSV NI IMPORT EXTÉRIEUR)
+           ========================================================================= */
+        // Indexées par nom de pièce, nom nettoyé ou code 4 chiffres -> { nomPiece, masse, volume, materiau }
+        let donneesPLMParPiece = {};
+        let commentaireRevisionBrut = "";
+
+        const fichesGeneriques = {
+            etapes: [
+                "Isoler la zone d'intervention et couper l'alimentation électrique si nécessaire.",
+                "Dévisser les éléments de fixation en conservant la visserie dans le bac de tri.",
+                "Extraire délicatement la pièce et inspecter l'état des surfaces de contact."
+            ],
+            criteres: {
+                fonction: "Assurer la liaison mécanique, thermique ou fonctionnelle au sein du sous-ensemble de la machine.",
+                materiau: "Matériau CAO défini dans les propriétés PLM de la pièce 3DEXPERIENCE.",
+                fixation: "Assemblage standardisé par vis métriques ou emboîtement direct.",
+                fabrication: "Usinage ou injection plastique conforme aux spécifications CAO.",
+                environnement: "Recyclable selon la filière adaptée (métaux / polymères techniques).",
+                dangerosite: "Aucun danger particulier hors manipulation de pièces mécaniques.",
+                inflammabilite: "Faible ou auto-extinguible selon le matériau.",
+                fluides_elec: "Composant passif ou actif selon son intégration dans le module.",
+                mobilite: "Démontable lors de la maintenance préventive ou corrective.",
+                historique: "Données extraites directement des métadonnées PLM 3DEXPERIENCE."
+            }
+        };
+
+        const libellesCriteres = [
+            { cle: "fonction", num: "01", titre: "Rôle fonctionnel" },
+            { cle: "materiau", num: "02", titre: "Matériau" },
+            { cle: "fixation", num: "03", titre: "Fixation" },
+            { cle: "fabrication", num: "04", titre: "Fabrication" },
+            { cle: "geometrie", num: "05", titre: "Géométrie & Réf" },
+            { cle: "environnement", num: "06", titre: "Environnement" },
+            { cle: "dangerosite", num: "07", titre: "Sécurité" },
+            { cle: "inflammabilite", num: "08", titre: "Inflammabilité" },
+            { cle: "fluides_elec", num: "09", titre: "Électricité / Fluides" },
+            { cle: "mobilite", num: "10", titre: "Mobilité" },
+            { cle: "historique", num: "11", titre: "Historique & Notes" }
+        ];
+
+        let codePieceActuel = "PRINTHEAD";
+        let nomCAORecu = "PRINTHEAD";
+        let critereActuel = "fonction";
+        let porteeCible = "instance";
+        let dernierNomEnvoye3DX = undefined;
+        let imagesEnCours = [];
+        let animerPremiereNote = false;
+        let timerToast = null;
+
+        // États et notes partagés avec l'autre vue via localStorage + copie légère vers Firebase
+        let etatsPieces = JSON.parse(localStorage.getItem("etats_buse_ihs")) || {};
+        let etatsInstances = JSON.parse(localStorage.getItem("etats_instances_buse_ihs")) || {};
+        let notesLocales = JSON.parse(localStorage.getItem("notes_buse_ihs")) || [];
+        const FIREBASE_URL = "https://ensamstagem1-default-rtdb.europe-west1.firebasedatabase.app/notes_buse.json";
+
+        /* =========================================================================
+           2. UTILITAIRES, TOAST & DÉCODAGE DU COMMENTAIRE DE RÉVISION PLM
+           ========================================================================= */
+        function echapperHTML(texte) {
+            return String(texte || "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;");
+        }
+
+        function extraireNomCourtInstance(nomBrut) {
+            if (!nomBrut) return "";
+            const matchParen = String(nomBrut).match(/\(([^)]+)\)\s*$/);
+            return matchParen ? matchParen[1] : String(nomBrut);
+        }
+
+        // Retire suffixes d'instance/révision et préfixes connus de noms d'acteurs
+        function nettoyerNomBase(nomBrut) {
+            return String(nomBrut || "")
+                .replace(/\s*\([^)]+\)\s*$/, "")
+                .replace(/\s+A\s*$/, "")
+                .replace(/^mael_Original\s+ultimakerCS_/i, "")
+                .trim();
+        }
+
+        function extraireCodeDepuisNomCATIA(nomBrut) {
+            if (!nomBrut || nomBrut === "PRINTHEAD") return "PRINTHEAD";
+            const texte = nomBrut.trim();
+            const match4 = texte.match(/(?:_|^|\b)(\d{4})(?:-|_|\b)/);
+            if (match4) return match4[1];
+            return nettoyerNomBase(texte) || texte;
+        }
+
+        function obtenirInfosAffichees(code, nomCAO) {
+            const plmPiece = trouverDonneesPLMPourPiece(nomCAO, code);
+            if (code === "PRINTHEAD" || !nomCAO || nomCAO === "PRINTHEAD") {
+                return {
+                    ref: "PRINTHEAD",
+                    nomOfficiel: plmPiece ? plmPiece.nomPiece : "Print Head Assembly"
+                };
+            }
+
+            const estCode4 = /^\d{4}$/.test(code);
+            const nomPropre = nettoyerNomBase(nomCAO) || nomCAO;
+            return {
+                ref: estCode4 ? "#" + code : nomPropre,
+                nomOfficiel: plmPiece ? plmPiece.nomPiece : nomPropre
+            };
+        }
+
+        function afficherToast(message) {
+            const toast = document.getElementById("toastFeedback");
+            if (!toast) return;
+
+            toast.textContent = message;
+            toast.classList.add("visible");
+
+            if (timerToast) clearTimeout(timerToast);
+            timerToast = setTimeout(function () {
+                toast.classList.remove("visible");
+                timerToast = null;
+            }, 2500);
+        }
+
+        // Parse le commentaire multi-lignes envoyé par le script PLM ("Nom | Masse : ... | Volume : ... | Matériau : ...")
+        function decoderCommentaireRevisionPere(texteCommentaire) {
+            if (!texteCommentaire || typeof texteCommentaire !== "string") return;
+            commentaireRevisionBrut = texteCommentaire;
+            try {
+                sessionStorage.setItem("plm_cache_m1", texteCommentaire);
+            } catch (e) {}
+
+            const lignes = texteCommentaire.split(/\r?\n/);
+            let nbPiecesPLM = 0;
+
+            lignes.forEach(ligne => {
+                const l = ligne.trim();
+                if (!l) return;
+
+                const morceaux = l.split("|").map(m => m.trim());
+                if (morceaux.length >= 2) {
+                    const nomPiecePLM = morceaux[0].replace(/^\[\d+\]\s*/, "").trim();
+                    let masse = "Calcul CAO";
+                    let volume = "--";
+                    let materiau = "Standard";
+
+                    morceaux.forEach(m => {
+                        const matchMasse = m.match(/^Masse\s*:\s*(.+)$/i);
+                        const matchVol = m.match(/^Volume\s*:\s*(.+)$/i);
+                        const matchMat = m.match(/^Mat[eé]riau\s*:\s*(.+)$/i);
+
+                        if (matchMasse) masse = matchMasse[1].trim();
+                        if (matchVol) volume = matchVol[1].trim();
+                        if (matchMat) materiau = matchMat[1].trim();
+                    });
+
+                    const objetPLM = {
+                        nomPiece: nomPiecePLM,
+                        masse: masse,
+                        volume: volume,
+                        materiau: materiau
+                    };
+
+                    donneesPLMParPiece[nomPiecePLM.toLowerCase()] = objetPLM;
+                    const baseMin = nettoyerNomBase(nomPiecePLM).toLowerCase();
+                    if (baseMin) donneesPLMParPiece[baseMin] = objetPLM;
+
+                    const match4 = nomPiecePLM.match(/(?:_|^|\b)(\d{4})(?:-|_|\b)/);
+                    if (match4) {
+                        donneesPLMParPiece[match4[1]] = objetPLM;
+                    }
+                    nbPiecesPLM++;
+                }
+            });
+
+            const badgePLM = document.getElementById("statutPLM");
+            if (badgePLM) {
+                badgePLM.textContent = `PLM : ${nbPiecesPLM} pièces extraites`;
+                badgePLM.style.color = "#28894B";
+            }
+
+            chargerPieceParCode(codePieceActuel);
+        }
+
+        function trouverDonneesPLMPourPiece(nomActeurClique, codeCatalogue) {
+            if (!nomActeurClique) return null;
+            const nomMin = nomActeurClique.trim().toLowerCase();
+
+            // 1. Correspondance directe sur le nom de l'acteur
+            if (donneesPLMParPiece[nomMin]) return donneesPLMParPiece[nomMin];
+
+            // 2. Sans suffixe d'instance (ex: "(NAUO142)", ".1", " A")
+            const sansSuffixeInstance = nettoyerNomBase(nomActeurClique)
+                .toLowerCase()
+                .replace(/\.\d+$/, "")
+                .trim();
+            if (donneesPLMParPiece[sansSuffixeInstance]) return donneesPLMParPiece[sansSuffixeInstance];
+
+            // 3. Correspondance via le code catalogue à 4 chiffres
+            if (codeCatalogue && donneesPLMParPiece[codeCatalogue]) return donneesPLMParPiece[codeCatalogue];
+
+            // 4. Recherche partielle en secours
+            for (const [cle, val] of Object.entries(donneesPLMParPiece)) {
+                if (cle.length >= 3 && (nomMin.includes(cle) || (sansSuffixeInstance && cle.includes(sansSuffixeInstance)))) {
+                    return val;
+                }
+            }
+
+            return null;
+        }
+
+        /* =========================================================================
+           2B. GESTION DU COLLAGE D'IMAGES (CTRL+V / CLIC DROIT COLLER)
+           ========================================================================= */
+        // Compresse l'image collée pour limiter l'empreinte dans localStorage
+        function compresserImageFichier(file, onDone) {
+            const reader = new FileReader();
+            reader.onload = function (ev) {
+                const img = new Image();
+                img.onload = function () {
+                    const maxLargeur = 760;
+                    let w = img.width;
+                    let h = img.height;
+                    if (w > maxLargeur) {
+                        h = Math.round((h * maxLargeur) / w);
+                        w = maxLargeur;
+                    }
+
+                    const canvas = document.createElement("canvas");
+                    canvas.width = w;
+                    canvas.height = h;
+                    const ctx = canvas.getContext("2d");
+                    ctx.fillStyle = "#FFFFFF";
+                    ctx.fillRect(0, 0, w, h);
+                    ctx.drawImage(img, 0, 0, w, h);
+
+                    const dataUrl = canvas.toDataURL("image/jpeg", 0.75);
+                    onDone({ src: dataUrl, w: w, h: h });
+                };
+                img.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function afficherApercuImagesEnCours() {
+            const conteneur = document.getElementById("apercuImagesNote");
+            if (!conteneur) return;
+            conteneur.innerHTML = "";
+
+            imagesEnCours.forEach((imgObj, index) => {
+                const wrap = document.createElement("div");
+                wrap.className = "paste-thumb-wrap";
+
+                const img = document.createElement("img");
+                img.className = "paste-thumb";
+                img.src = imgObj.src;
+                img.alt = "Capture " + (index + 1);
+                img.onclick = () => ouvrirLightbox(imgObj.src);
+
+                const btnSuppr = document.createElement("button");
+                btnSuppr.type = "button";
+                btnSuppr.className = "paste-remove-btn";
+                btnSuppr.title = "Retirer cette capture";
+                btnSuppr.textContent = "×";
+                btnSuppr.onclick = (e) => {
+                    e.stopPropagation();
+                    retirerImageEnCours(index);
+                };
+
+                wrap.appendChild(img);
+                wrap.appendChild(btnSuppr);
+                conteneur.appendChild(wrap);
+            });
+        }
+
+        function retirerImageEnCours(index) {
+            imagesEnCours.splice(index, 1);
+            afficherApercuImagesEnCours();
+        }
+
+        function ouvrirLightbox(src) {
+            const modal = document.getElementById("lightboxModal");
+            const img = document.getElementById("lightboxImg");
+            if (!modal || !img) return;
+            img.src = src;
+            modal.classList.add("open");
+        }
+
+        function fermerLightbox() {
+            const modal = document.getElementById("lightboxModal");
+            if (modal) modal.classList.remove("open");
+        }
+
+        document.getElementById("noteTexte").addEventListener("paste", function (event) {
+            const clipboard = event.clipboardData || window.clipboardData;
+            if (!clipboard || !clipboard.items) return;
+
+            let imageTrouvee = false;
+            for (let i = 0; i < clipboard.items.length; i++) {
+                const item = clipboard.items[i];
+                if (item.type && item.type.indexOf("image/") === 0) {
+                    const fichier = item.getAsFile();
+                    if (fichier) {
+                        imageTrouvee = true;
+                        compresserImageFichier(fichier, function (imgCompressee) {
+                            imagesEnCours.push(imgCompressee);
+                            afficherApercuImagesEnCours();
+                        });
+                    }
+                }
+            }
+
+            if (imageTrouvee) {
+                event.preventDefault();
+            }
+        });
+
+        /* =========================================================================
+           3. SYNCHRONISATION SÉLECTION 3D, PORTÉE RÉFÉRENCE/INSTANCE & INTERFACE
+           ========================================================================= */
+        // Déduplique les notifications de sélection envoyées au parent 3DEXPERIENCE
+        function notifierSelection3DX(nomPiece) {
+            const cible = nomPiece || null;
+            if (cible === dernierNomEnvoye3DX) return;
+            dernierNomEnvoye3DX = cible;
+
+            const paquet = {
+                action: "SYNC_SELECTION",
+                nomPiece: cible
+            };
+            window.parent.postMessage(JSON.stringify(paquet), "*");
+        }
+
+        function definirPorteeCible(nouvellePortee) {
+            porteeCible = (nouvellePortee === "reference") ? "reference" : "instance";
+            document.querySelectorAll('.scope-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.scope === porteeCible);
+            });
+            mettreAJourApercuCible();
+        }
+
+        function mettreAJourApercuCible() {
+            const info = obtenirInfosAffichees(codePieceActuel, nomCAORecu);
+            const estInstanceValide = (porteeCible === "instance" && nomCAORecu && nomCAORecu !== "PRINTHEAD");
+
+            let htmlApercu = "";
+            if (estInstanceValide) {
+                htmlApercu = `Cible : <strong>${echapperHTML(nomCAORecu)}</strong> (instance spécifique)`;
+            } else if (porteeCible === "instance") {
+                htmlApercu = `Cible : <strong>${echapperHTML(info.ref)} — ${echapperHTML(info.nomOfficiel)}</strong> (sélectionnez une pièce 3D pour cibler une instance)`;
+            } else {
+                htmlApercu = `Cible : <strong>${echapperHTML(info.ref)} — ${echapperHTML(info.nomOfficiel)}</strong> (toutes les instances)`;
+            }
+
+            const elDiag = document.getElementById("apercuCibleDiag");
+            const elNote = document.getElementById("apercuCibleNote");
+            if (elDiag) elDiag.innerHTML = htmlApercu;
+            if (elNote) elNote.innerHTML = htmlApercu;
+        }
+
+        function changerOnglet(idOnglet, boutonClique) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + idOnglet).classList.add('active');
+            boutonClique.classList.add('active');
+        }
+
+        function recevoirMessage3DX(messageBrut) {
+            nomCAORecu = messageBrut;
+            const codeExtrait = extraireCodeDepuisNomCATIA(messageBrut);
+            chargerPieceParCode(codeExtrait);
+        }
+
+        function chargerPieceParCode(code) {
+            const codeValide = code || "PRINTHEAD";
+            codePieceActuel = codeValide;
+
+            const info = obtenirInfosAffichees(codeValide, nomCAORecu);
+            const plmPiece = trouverDonneesPLMPourPiece(nomCAORecu, codeValide);
+
+            document.getElementById("badgeRef").textContent = info.ref;
+            document.getElementById("badgeCAO").textContent = nomCAORecu;
+            document.getElementById("nomPiece").textContent = info.nomOfficiel;
+
+            document.getElementById("valRef").textContent = info.ref;
+            document.getElementById("valPoids").textContent = plmPiece ? plmPiece.masse : "Calcul CAO";
+            document.getElementById("valMateriau").textContent = plmPiece ? plmPiece.materiau : "Standard";
+
+            // Priorité à l'état déclaré sur l'instance courante avant l'état de référence
+            const badge = document.getElementById("badgeEtat");
+            const etatInst = (nomCAORecu && nomCAORecu !== "PRINTHEAD") ? etatsInstances[nomCAORecu] : null;
+            const etatRef = etatsPieces[codeValide] || null;
+
+            if (etatInst) {
+                badge.textContent = "État (Instance) : " + etatInst.texte;
+                badge.style.background = etatInst.couleur;
+                badge.style.color = "#FFFFFF";
+            } else if (etatRef) {
+                badge.textContent = "État (Réf.) : " + etatRef.texte;
+                badge.style.background = etatRef.couleur;
+                badge.style.color = "#FFFFFF";
+            } else {
+                badge.textContent = "État : Non contrôlé";
+                badge.style.background = "#F0F2F5";
+                badge.style.color = "#1D1D1F";
+            }
+
+            const listeEtapes = document.getElementById("listeEtapes");
+            listeEtapes.innerHTML = "";
+            fichesGeneriques.etapes.forEach(e => {
+                const li = document.createElement("li");
+                li.textContent = e;
+                listeEtapes.appendChild(li);
+            });
+
+            mettreAJourApercuCible();
+            genererGrilleCriteres();
+            afficherDetailCritere(critereActuel);
+            afficherNotes();
+
+            const piecePour3DX = (nomCAORecu && nomCAORecu !== "PRINTHEAD") ? nomCAORecu : null;
+            notifierSelection3DX(piecePour3DX);
+        }
+
+        function genererGrilleCriteres() {
+            const grille = document.getElementById("grilleCriteres");
+            grille.innerHTML = "";
+            libellesCriteres.forEach(item => {
+                const btn = document.createElement("button");
+                btn.className = "crit-btn" + (item.cle === critereActuel ? " active" : "");
+                btn.innerHTML = `
+                    <span class="crit-num">Critère ${item.num}</span>
+                    <span class="crit-name">${item.titre}</span>
+                `;
+                btn.onclick = () => afficherDetailCritere(item.cle);
+                grille.appendChild(btn);
+            });
+        }
+
+        function afficherDetailCritere(cle) {
+            critereActuel = cle;
+            genererGrilleCriteres();
+            const info = obtenirInfosAffichees(codePieceActuel, nomCAORecu);
+            const infoCritere = libellesCriteres.find(c => c.cle === cle);
+            const plmPiece = trouverDonneesPLMPourPiece(nomCAORecu, codePieceActuel);
+
+            document.getElementById("titreCritere").textContent = `${infoCritere.num}. ${infoCritere.titre} — [${info.ref}]`;
+            
+            let texte = "";
+            if (cle === "materiau") {
+                if (plmPiece) {
+                    texte = `Matériau CAO extrait de 3DEXPERIENCE : ${plmPiece.materiau}\n` +
+                            `Masse associée : ${plmPiece.masse} | Volume CAO : ${plmPiece.volume}`;
+                } else {
+                    texte = fichesGeneriques.criteres.materiau;
+                }
+            } else if (cle === "geometrie") {
+                texte = `Référence détectée : ${info.ref}\n` +
+                        `Désignation : ${info.nomOfficiel}\n` +
+                        `Instance CATIA : ${nomCAORecu}`;
+                if (plmPiece) {
+                    texte += `\n\nDONNÉES EXTRAITES DU PLM 3DEXPERIENCE :\n` +
+                             `Pièce PLM : ${plmPiece.nomPiece}\n` +
+                             `Masse CAO : ${plmPiece.masse}\n` +
+                             `Volume CAO : ${plmPiece.volume}\n` +
+                             `Matériau CAO : ${plmPiece.materiau}`;
+                }
+            } else {
+                texte = fichesGeneriques.criteres[cle];
+            }
+
+            if (cle === "historique") {
+                const notesDeLaPiece = notesLocales.filter(n => {
+                    if (n.portee === "instance") {
+                        return n.instanceCAO === nomCAORecu;
+                    }
+                    return n.code === codePieceActuel;
+                });
+
+                if (notesDeLaPiece.length > 0) {
+                    texte += "\n\nNOTES OPÉRATEURS : " + notesDeLaPiece.map(n => {
+                        const prefixe = n.portee === "instance" ? "[INSTANCE]" : "[RÉFÉRENCE]";
+                        const nbImg = (n.images && n.images.length > 0) ? ` (${n.images.length} capture(s))` : "";
+                        return `${prefixe} [${n.tag}] ${n.texte || "Capture jointe"}${nbImg} (${n.auteur})`;
+                    }).join(" | ");
+                }
+            }
+            document.getElementById("texteCritere").textContent = texte;
+        }
+
+        function definirEtat(texteEtat, couleurHex) {
+            if (porteeCible === "instance" && nomCAORecu && nomCAORecu !== "PRINTHEAD") {
+                etatsInstances[nomCAORecu] = {
+                    code: codePieceActuel,
+                    texte: texteEtat,
+                    couleur: couleurHex
+                };
+                localStorage.setItem("etats_instances_buse_ihs", JSON.stringify(etatsInstances));
+            } else {
+                etatsPieces[codePieceActuel] = { texte: texteEtat, couleur: couleurHex };
+                localStorage.setItem("etats_buse_ihs", JSON.stringify(etatsPieces));
+            }
+            chargerPieceParCode(codePieceActuel);
+        }
+
+        function ajouterNote() {
+            const auteur = document.getElementById("noteAuteur").value.trim() || "Opérateur";
+            const tag = document.getElementById("noteTag").value;
+            const texte = document.getElementById("noteTexte").value.trim();
+
+            if (!texte && imagesEnCours.length === 0) return;
+
+            const info = obtenirInfosAffichees(codePieceActuel, nomCAORecu);
+            const porteeEffective = (porteeCible === "instance" && nomCAORecu && nomCAORecu !== "PRINTHEAD")
+                ? "instance"
+                : "reference";
+
+            const nouvelleNote = {
+                portee: porteeEffective,
+                code: codePieceActuel,
+                instanceCAO: porteeEffective === "instance" ? nomCAORecu : null,
+                nomPiece: porteeEffective === "instance"
+                    ? nomCAORecu
+                    : `${info.ref} - ${info.nomOfficiel}`,
+                auteur: auteur,
+                tag: tag,
+                texte: texte,
+                images: imagesEnCours.slice(),
+                date: new Date().toLocaleString("fr-FR")
+            };
+
+            notesLocales.unshift(nouvelleNote);
+
+            try {
+                localStorage.setItem("notes_buse_ihs", JSON.stringify(notesLocales));
+            } catch (eQuota) {
+                notesLocales.shift();
+                alert("Mémoire locale du navigateur pleine : supprimez d'anciennes notes ou limitez le nombre de captures.");
+                return;
+            }
+
+            const copieFirebase = Object.assign({}, nouvelleNote, {
+                images: undefined,
+                nbCaptures: nouvelleNote.images.length
+            });
+            fetch(FIREBASE_URL, { method: "POST", body: JSON.stringify(copieFirebase) }).catch(() => {});
+
+            document.getElementById("noteTexte").value = "";
+            imagesEnCours = [];
+            afficherApercuImagesEnCours();
+
+            animerPremiereNote = true;
+            afficherNotes();
+            if (critereActuel === "historique") afficherDetailCritere("historique");
+
+            const texteCibleToast = (porteeEffective === "instance")
+                ? `Note ajoutée sur ${extraireNomCourtInstance(nomCAORecu)}`
+                : `Note ajoutée sur ${info.ref} (Référence)`;
+            afficherToast(texteCibleToast);
+        }
+
+        function afficherNotes() {
+            const conteneur = document.getElementById("listeNotes");
+            conteneur.innerHTML = "";
+            if (notesLocales.length === 0) {
+                animerPremiereNote = false;
+                conteneur.innerHTML = "<p style='color:#6E6E73; font-size:12.5px;'>Aucune note enregistrée.</p>";
+                return;
+            }
+            notesLocales.forEach((n, index) => {
+                const estInstance = (n.portee === "instance");
+                const badgePorteeClass = estInstance ? "scope-inst" : "scope-ref";
+                const badgePorteeTexte = estInstance ? "INSTANCE" : "RÉFÉRENCE";
+                const cibleTexte = estInstance ? (n.instanceCAO || n.nomPiece) : n.nomPiece;
+
+                const div = document.createElement("div");
+                div.className = "note-item" + (animerPremiereNote && index === 0 ? " is-new" : "");
+
+                const texteAffiche = n.texte
+                    ? echapperHTML(n.texte)
+                    : "<em style='color:#6E6E73;'>Capture d'écran jointe</em>";
+
+                div.innerHTML = `
+                    <div class="note-meta">${echapperHTML(n.date)} — <strong>${echapperHTML(n.auteur)}</strong> sur <strong>${echapperHTML(cibleTexte)}</strong></div>
+                    <div>
+                        <span class="note-scope-badge ${badgePorteeClass}">${badgePorteeTexte}</span>
+                        <span class="note-tag">${echapperHTML(n.tag)}</span>${texteAffiche}
+                    </div>
+                `;
+
+                if (Array.isArray(n.images) && n.images.length > 0) {
+                    const grid = document.createElement("div");
+                    grid.className = "note-images-grid";
+                    n.images.forEach((imgItem, idx) => {
+                        const src = (typeof imgItem === "string") ? imgItem : imgItem.src;
+                        if (!src) return;
+                        const img = document.createElement("img");
+                        img.className = "note-thumb";
+                        img.src = src;
+                        img.alt = "Capture " + (idx + 1);
+                        img.onclick = () => ouvrirLightbox(src);
+                        grid.appendChild(img);
+                    });
+                    div.appendChild(grid);
+                }
+
+                conteneur.appendChild(div);
+            });
+
+            animerPremiereNote = false;
+        }
+
+        /* =========================================================================
+           4. EXPORT WORD (.doc MHTML SANS BIBLIOTHÈQUE EXTERNE, AVEC CAPTURES)
+           ========================================================================= */
+        function obtenirCiblesAnalysees() {
+            const cibles = [];
+            const refsVues = new Set();
+            const instancesVues = new Map();
+
+            Object.keys(etatsPieces).forEach(code => refsVues.add(code));
+            notesLocales.forEach(n => {
+                if (n.portee !== "instance" && n.code) {
+                    refsVues.add(n.code);
+                }
+            });
+
+            refsVues.forEach(code => {
+                cibles.push({
+                    type: "reference",
+                    code: code,
+                    instanceCAO: null
+                });
+            });
+
+            Object.entries(etatsInstances).forEach(([inst, data]) => {
+                instancesVues.set(inst, (data && data.code) ? data.code : extraireCodeDepuisNomCATIA(inst));
+            });
+            notesLocales.forEach(n => {
+                if (n.portee === "instance" && n.instanceCAO) {
+                    if (!instancesVues.has(n.instanceCAO)) {
+                        instancesVues.set(n.instanceCAO, n.code || extraireCodeDepuisNomCATIA(n.instanceCAO));
+                    }
+                }
+            });
+
+            instancesVues.forEach((code, inst) => {
+                cibles.push({
+                    type: "instance",
+                    code: code,
+                    instanceCAO: inst
+                });
+            });
+
+            return cibles;
+        }
+
+        function obtenirNotesPourCible(cible) {
+            if (cible.type === "instance") {
+                return notesLocales.filter(n => n.portee === "instance" && n.instanceCAO === cible.instanceCAO);
+            }
+            return notesLocales.filter(n => n.portee !== "instance" && n.code === cible.code);
+        }
+
+        function obtenirEtatPourCible(cible) {
+            if (cible.type === "instance") {
+                return etatsInstances[cible.instanceCAO] ? etatsInstances[cible.instanceCAO].texte : "Non contrôlé";
+            }
+            return etatsPieces[cible.code] ? etatsPieces[cible.code].texte : "Non contrôlé";
+        }
+
+        function utf8ToBase64(str) {
+            const bytes = new TextEncoder().encode(str);
+            let bin = "";
+            for (let i = 0; i < bytes.length; i++) {
+                bin += String.fromCharCode(bytes[i]);
+            }
+            return btoa(bin);
+        }
+
+        function decouperBase64(b64) {
+            return b64.replace(/.{1,76}/g, "$&\r\n");
+        }
+
+        // Construit une archive MHTML (.doc) pour inclure les captures en base64 sans dépendance externe
+        function exporterWord() {
+            const cibles = obtenirCiblesAnalysees();
+            if (cibles.length === 0) {
+                alert("Aucune pièce analysée ou note enregistrée à exporter.");
+                return;
+            }
+
+            const dateJour = new Date().toLocaleString("fr-FR");
+            const piecesJointesMHTML = [];
+            let compteurImg = 0;
+
+            let html = `<!DOCTYPE html>
+            <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+            <head>
+                <meta charset="utf-8">
+                <style>
+                    body { font-family: Arial, sans-serif; color: #1D1D1F; }
+                    h1 { color: #005386; border-bottom: 2px solid #005386; padding-bottom: 6px; }
+                    h2 { color: #002C4B; margin-top: 24px; font-size: 16px; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+                    th { background-color: #005386; color: #FFFFFF; padding: 8px; text-align: left; border: 1px solid #CCCCCC; }
+                    td { padding: 8px; border: 1px solid #CCCCCC; vertical-align: top; font-size: 13px; }
+                    .word-img { display: block; margin-top: 6px; border: 1px solid #DDDDDD; }
+                </style>
+            </head>
+            <body>
+                <h1>Rapport d'Expertise & Maintenance (Méthode 1) — 3DEXPERIENCE</h1>
+                <p><strong>Date d'édition :</strong> ${echapperHTML(dateJour)}</p>
+
+                <h2>Synthèse des pièces analysées et observations</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width:12%;">Référence</th>
+                            <th style="width:24%;">Portée / Instance</th>
+                            <th style="width:20%;">Désignation</th>
+                            <th style="width:13%;">État déclaré</th>
+                            <th style="width:31%;">Notes & Observations</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+
+            cibles.forEach(cible => {
+                const info = obtenirInfosAffichees(cible.code, cible.instanceCAO || cible.code);
+                const porteeLabel = (cible.type === "instance")
+                    ? `<strong>Instance :</strong> ${echapperHTML(cible.instanceCAO)}`
+                    : `<strong>Référence</strong> (toutes)`;
+                const etat = obtenirEtatPourCible(cible);
+                const notesCible = obtenirNotesPourCible(cible);
+
+                let htmlNotes = "<em>Aucune note</em>";
+                if (notesCible.length > 0) {
+                    htmlNotes = notesCible.map(n => {
+                        let blocImages = "";
+                        if (Array.isArray(n.images) && n.images.length > 0) {
+                            n.images.forEach(imgItem => {
+                                const src = (typeof imgItem === "string") ? imgItem : imgItem.src;
+                                if (!src || !src.includes("base64,")) return;
+
+                                compteurImg++;
+                                const base64Pur = src.split("base64,")[1];
+                                const mimeMatch = src.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,/);
+                                const mimeType = mimeMatch ? mimeMatch[1] : "image/jpeg";
+                                const ext = mimeType.includes("png") ? "png" : "jpg";
+                                const locationUri = `file:///C:/3dx_capture_${compteurImg}.${ext}`;
+
+                                piecesJointesMHTML.push({
+                                    location: locationUri,
+                                    mimeType: mimeType,
+                                    base64: base64Pur
+                                });
+
+                                const maxW = 240;
+                                let attrDim = `width="${maxW}"`;
+                                if (typeof imgItem === "object" && imgItem.w && imgItem.h) {
+                                    const wFinal = Math.min(maxW, imgItem.w);
+                                    const hFinal = Math.round((imgItem.h * wFinal) / imgItem.w);
+                                    attrDim = `width="${wFinal}" height="${hFinal}"`;
+                                }
+
+                                blocImages += `<br><img class="word-img" src="${locationUri}" ${attrDim} alt="Capture ${compteurImg}">`;
+                            });
+                        }
+
+                        const txtNote = n.texte ? echapperHTML(n.texte) : "<em>Capture jointe</em>";
+                        return `<div><strong>[${echapperHTML(n.tag)}]</strong> ${txtNote}${blocImages}<br><small style="color:#6E6E73;">(${echapperHTML(n.auteur)} - ${echapperHTML(n.date)})</small></div>`;
+                    }).join("<hr style='border:0; border-top:1px solid #EEE; margin:6px 0;'>");
+                }
+
+                html += `
+                        <tr>
+                            <td><strong>${echapperHTML(info.ref)}</strong></td>
+                            <td>${porteeLabel}</td>
+                            <td>${echapperHTML(info.nomOfficiel)}</td>
+                            <td><strong>${echapperHTML(etat)}</strong></td>
+                            <td>${htmlNotes}</td>
+                        </tr>`;
+            });
+
+            html += `
+                    </tbody>
+                </table>
+            </body>
+            </html>`;
+
+            const boundary = "----=_NextPart_3DX_IHS_REPORT";
+            const htmlLocation = "file:///C:/rapport_expertise_3dx.html";
+            let mhtml = "";
+            mhtml += "MIME-Version: 1.0\r\n";
+            mhtml += `Content-Type: multipart/related; boundary="${boundary}"\r\n\r\n`;
+
+            mhtml += `--${boundary}\r\n`;
+            mhtml += `Content-Location: ${htmlLocation}\r\n`;
+            mhtml += "Content-Type: text/html; charset=\"utf-8\"\r\n";
+            mhtml += "Content-Transfer-Encoding: base64\r\n\r\n";
+            mhtml += decouperBase64(utf8ToBase64(html)) + "\r\n";
+
+            piecesJointesMHTML.forEach(pj => {
+                mhtml += `--${boundary}\r\n`;
+                mhtml += `Content-Location: ${pj.location}\r\n`;
+                mhtml += `Content-Type: ${pj.mimeType}\r\n`;
+                mhtml += "Content-Transfer-Encoding: base64\r\n\r\n";
+                mhtml += decouperBase64(pj.base64) + "\r\n";
+            });
+
+            mhtml += `--${boundary}--\r\n`;
+
+            const blob = new Blob([mhtml], { type: "application/msword;charset=utf-8" });
+            const lien = document.createElement("a");
+            lien.href = URL.createObjectURL(blob);
+            lien.download = "Rapport_Expertise_3DX_M1.doc";
+            lien.click();
+        }
+
+        /* =========================================================================
+           5. ÉCOUTEUR UNIFIÉ (PLM_ASSEMBLAGE + CLIC 3D + SÉLECTION ARBRE)
+           ========================================================================= */
+        const ACTIONS_IGNOREES = new Set([
+            "SYNC_SELECTION",
+            "FICHE_READY",
+            "TREE_READY",
+            "SELECT_FROM_TREE",
+            "TREE_DATA",
+            "HIGHLIGHT_TREE"
+        ]);
+
+        window.addEventListener("message", function (event) {
+            if (!event.data) return;
+
+            const raw = event.data;
+
+            // 1. Messages JSON structurés (payload PLM de l'assemblage ou signaux internes)
+            try {
+                const parsed = (typeof raw === "string") ? JSON.parse(raw) : raw;
+                if (parsed && typeof parsed === "object") {
+                    if (parsed.action && ACTIONS_IGNOREES.has(parsed.action)) return;
+                    if (parsed.type === "PLAY_ANIMATION" || parsed.type === "STOP_ANIMATION" || parsed.type === "ANIMATION_STATE") return;
+
+                    if (parsed.type === "PLM_ASSEMBLAGE") {
+                        let texteCommentaire = parsed.commentaireRevision || "";
+                        if (!texteCommentaire && parsed.plmBrut) {
+                            for (const [k, v] of Object.entries(parsed.plmBrut)) {
+                                if (typeof v === "string" && (v.includes("Masse :") || v.includes("|"))) {
+                                    texteCommentaire = v;
+                                    break;
+                                }
+                            }
+                        }
+                        if (texteCommentaire) {
+                            decoderCommentaireRevisionPere(texteCommentaire);
+                        }
+                        return;
+                    }
+                    return;
+                }
+            } catch (e) {
+                // Message texte simple : traité ci-dessous comme nom de pièce/acteur
+            }
+
+            // 2. Nom de pièce envoyé au clic 3D ou depuis l'arbre
+            if (typeof raw === "string") {
+                const msg = raw.trim().replace(/^['"]|['"]$/g, "");
+                if (!msg || msg === "ready") return;
+                recevoirMessage3DX(msg);
+            }
+        });
+
+        window.addEventListener("load", function () {
+            window.parent.postMessage(JSON.stringify({ action: "FICHE_READY" }), "*");
+        });
+
+        window.addEventListener("beforeunload", function () {
+            notifierSelection3DX(null);
+        });
+
+        // Restaure le cache PLM de session si disponible avant l'initialisation par défaut
+        try {
+            const cachePLM = sessionStorage.getItem("plm_cache_m1");
+            if (cachePLM) {
+                decoderCommentaireRevisionPere(cachePLM);
+            }
+        } catch (e) {}
+
+        recevoirMessage3DX("PRINTHEAD");
+    </script>
+</body>
+</html>
